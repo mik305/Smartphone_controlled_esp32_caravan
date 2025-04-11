@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>ESP32 Sterowanie Silownikami</h1>
+<h3>Dane z czujnika:</h3>
+<div id='sensorData'>Ladowanie...</div>
+<h3>Silownik 1</h3>
+<label><input type="radio" name="actuator_1" onclick="toggleActuator(1, 'extend')" /> Wysuwaj</label><br>
+<label><input type="radio" name="actuator_1" onclick="toggleActuator(1, 'retract')" /> Chowaj</label><br>
+<label><input type="radio" name="actuator_1" onclick="toggleActuator(1, 'stop')" checked /> Stop</label><br>
+<h3>Silownik 2</h3>
+<label><input type="radio" name="actuator_2" onclick="toggleActuator(2, 'extend')" /> Wysuwaj</label><br>
+<label><input type="radio" name="actuator_2" onclick="toggleActuator(2, 'retract')" /> Chowaj</label><br>
+<label><input type="radio" name="actuator_2" onclick="toggleActuator(2, 'stop')" checked /> Stop</label><br>
+<h3>Silownik 3</h3>
+<label><input type="radio" name="actuator_3" onclick="toggleActuator(3, 'extend')" /> Wysuwaj</label><br>
+<label><input type="radio" name="actuator_3" onclick="toggleActuator(3, 'retract')" /> Chowaj</label><br>
+<label><input type="radio" name="actuator_3" onclick="toggleActuator(3, 'stop')" checked /> Stop</label><br>
+<h3>Silownik 4</h3>
+<label><input type="radio" name="actuator_4" onclick="toggleActuator(4, 'extend')" /> Wysuwaj</label><br>
+<label><input type="radio" name="actuator_4" onclick="toggleActuator(4, 'retract')" /> Chowaj</label><br>
+<label><input type="radio" name="actuator_4" onclick="toggleActuator(4, 'stop')" checked /> Stop</label><br>
+<script>
+function toggleActuator(id, action) {
+    fetch('/' + action + '_' + id);
+}
+function fetchSensorData() {
+    fetch('/sensor').then(resp => resp.json()).then(data => {
+        document.getElementById('sensorData').innerHTML = 
+`Temperatura: ${data.temperature} C<br>Wilgotnosc: ${data.humidity} %`;
+    });
+}
+setInterval(fetchSensorData, 1000);
+fetchSensorData();
+</script>
+</body>
+</html>
