@@ -1,37 +1,170 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ESP32 Sterowanie Siłownikami</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+
+    h1, h3 {
+      text-align: center;
+    }
+
+    #sensorData {
+      text-align: center;
+      font-size: 1.2em;
+      margin-bottom: 30px;
+    }
+
+    #actuatorGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .actuator {
+      padding: 15px;
+      border-radius: 10px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .actuator-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
+    }
+
+    .btn {
+      padding: 12px 16px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-up,
+    .btn-down {
+      background-color: #4CAF50;
+    }
+
+    .btn-stop {
+      background-color: #f44336;
+    }
+
+    .btn span {
+      font-size: 20px;
+    }
+  </style>
+</head>
 <body>
-<h1>ESP32 Sterowanie Silownikami</h1>
-<h3>Dane z czujnika:</h3>
-<div id='sensorData'>Ladowanie...</div>
-<h3>Silownik 1</h3>
-<label><input type="radio" name="actuator_1" onclick="toggleActuator(1, 'extend')" /> Wysuwaj</label><br>
-<label><input type="radio" name="actuator_1" onclick="toggleActuator(1, 'retract')" /> Chowaj</label><br>
-<label><input type="radio" name="actuator_1" onclick="toggleActuator(1, 'stop')" checked /> Stop</label><br>
-<h3>Silownik 2</h3>
-<label><input type="radio" name="actuator_2" onclick="toggleActuator(2, 'extend')" /> Wysuwaj</label><br>
-<label><input type="radio" name="actuator_2" onclick="toggleActuator(2, 'retract')" /> Chowaj</label><br>
-<label><input type="radio" name="actuator_2" onclick="toggleActuator(2, 'stop')" checked /> Stop</label><br>
-<h3>Silownik 3</h3>
-<label><input type="radio" name="actuator_3" onclick="toggleActuator(3, 'extend')" /> Wysuwaj</label><br>
-<label><input type="radio" name="actuator_3" onclick="toggleActuator(3, 'retract')" /> Chowaj</label><br>
-<label><input type="radio" name="actuator_3" onclick="toggleActuator(3, 'stop')" checked /> Stop</label><br>
-<h3>Silownik 4</h3>
-<label><input type="radio" name="actuator_4" onclick="toggleActuator(4, 'extend')" /> Wysuwaj</label><br>
-<label><input type="radio" name="actuator_4" onclick="toggleActuator(4, 'retract')" /> Chowaj</label><br>
-<label><input type="radio" name="actuator_4" onclick="toggleActuator(4, 'stop')" checked /> Stop</label><br>
-<script>
-function toggleActuator(id, action) {
-    fetch('/' + action + '_' + id);
-}
-function fetchSensorData() {
-    fetch('/sensor').then(resp => resp.json()).then(data => {
-        document.getElementById('sensorData').innerHTML = 
-`Temperatura: ${data.temperature} C<br>Wilgotnosc: ${data.humidity} %`;
-    });
-}
-setInterval(fetchSensorData, 1000);
-fetchSensorData();
-</script>
+  <h1>System poziomowania przyczepy kempingowej - tryb ręczny</h1>
+  
+
+  <div id="actuatorGrid">
+    <!-- Siłownik 1 -->
+    <div class="actuator">
+      <h3>Siłownik 1</h3>
+      <div class="actuator-buttons">
+        <button class="btn btn-up" onclick="toggleActuator(1, 'extend')">
+          <span>⬆</span>
+        </button>
+        <button class="btn btn-down" onclick="toggleActuator(1, 'retract')">
+          <span>⬇</span>
+        </button>
+        <button class="btn btn-stop" onclick="toggleActuator(1, 'stop')">
+          STOP
+        </button>
+      </div>
+    </div>
+
+    <!-- Siłownik 2 -->
+    <div class="actuator">
+      <h3>Siłownik 2</h3>
+      <div class="actuator-buttons">
+        <button class="btn btn-up" onclick="toggleActuator(2, 'extend')">
+          <span>⬆</span>
+        </button>
+        <button class="btn btn-down" onclick="toggleActuator(2, 'retract')">
+          <span>⬇</span>
+        </button>
+        <button class="btn btn-stop" onclick="toggleActuator(2, 'stop')">
+          STOP
+        </button>
+      </div>
+    </div>
+
+    <!-- Siłownik 3 -->
+    <div class="actuator">
+      <h3>Siłownik 3</h3>
+      <div class="actuator-buttons">
+        <button class="btn btn-up" onclick="toggleActuator(3, 'extend')">
+          <span>⬆</span>
+        </button>
+        <button class="btn btn-down" onclick="toggleActuator(3, 'retract')">
+          <span>⬇</span>
+        </button>
+        <button class="btn btn-stop" onclick="toggleActuator(3, 'stop')">
+          STOP
+        </button>
+      </div>
+    </div>
+
+    <!-- Siłownik 4 -->
+    <div class="actuator">
+      <h3>Siłownik 4</h3>
+      <div class="actuator-buttons">
+        <button class="btn btn-up" onclick="toggleActuator(4, 'extend')">
+          <span>⬆</span>
+        </button>
+        <button class="btn btn-down" onclick="toggleActuator(4, 'retract')">
+          <span>⬇</span>
+        </button>
+        <button class="btn btn-stop" onclick="toggleActuator(4, 'stop')">
+          STOP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <h3>Dane z czujnika:</h3>
+  <div id='sensorData'>Ładowanie...</div>
+
+  <script>
+    function toggleActuator(id, action) {
+      fetch('/' + action + '_' + id);
+    }
+
+    function fetchSensorData() {
+      fetch('/sensor')
+        .then(resp => resp.json())
+        .then(data => {
+          document.getElementById('sensorData').innerHTML =
+            `Temperatura: ${data.temperature} °C<br>Wilgotność: ${data.humidity} %`;
+        });
+    }
+
+    setInterval(fetchSensorData, 1000);
+    fetchSensorData();
+  </script>
 </body>
 </html>
