@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>System poziomowania – wizualizacja 3D (ESP‑32)</title>
-
+  <title>System poziomowania – wizualizacja 3D</title>
   <style>
     body{font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;margin:0;padding:20px}
     h1{text-align:center;margin-top:0}
@@ -30,18 +29,47 @@
 
     /* ---- blok czujników ------------------------------------------------- */
     #sensorData{max-width:800px;margin:40px auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.1);font-size:1.05em}
+    #csvChooser{max-width:800px;margin:10px auto;text-align:center}
   </style>
 </head>
 <body>
-  <h1>System poziomowania – tryb online (ESP‑32)</h1>
+  <h1>System poziomowania – test z plikiem CSV (bryła 3D)</h1>
 
   <!-- =================================================================== -->
-  <!-- 1. Sterowanie siłownikami                                           -->
+  <!-- 1. Wczytanie pliku CSV                                              -->
   <!-- =================================================================== -->
-  <div id="actuatorGrid"></div>
+  <div id="csvChooser">
+    <label><strong>Wybierz plik CSV z danymi czujników:</strong>
+      <input type="file" id="csvFile" accept=".csv">
+    </label>
+    <p style="font-size:.9em;color:#666;margin-top:4px">
+      (Jeżeli przeglądarka blokuje odczyt plików lokalnych, uruchom tę stronę<br>
+       przez prosty serwer HTTP, np. <code>python -m http.server</code>)
+    </p>
+  </div>
 
   <!-- =================================================================== -->
-  <!-- 2. Scena 3D                                                         -->
+  <!-- 2. Sterowanie siłownikami                                           -->
+  <!-- =================================================================== -->
+  <div id="actuatorGrid">
+    <script>
+      const grid=document.currentScript.parentElement;
+      for(let i=1;i<=4;i++){
+        grid.insertAdjacentHTML('beforeend',`
+          <div class="actuator">
+            <h3>Siłownik ${i}</h3>
+            <div class="actuator-buttons">
+              <button class="btn btn-up"    onclick="toggleActuator(${i},'extend')">⬆</button>
+              <button class="btn btn-down"  onclick="toggleActuator(${i},'retract')">⬇</button>
+              <button class="btn btn-stop"  onclick="toggleActuator(${i},'stop')">STOP</button>
+            </div>
+          </div>`);
+      }
+    </script>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- 3. Scena 3D                                                         -->
   <!-- =================================================================== -->
   <div id="cubeScene">
     <div id="cube">
@@ -55,7 +83,7 @@
   </div>
 
   <!-- =================================================================== -->
-  <!-- 3. Wartości liczbowe                                                -->
+  <!-- 4. Wartości liczbowe                                                -->
   <!-- =================================================================== -->
   <div id="sensorData">
     <h3>Dane z czujników:</h3>
@@ -72,39 +100,48 @@
   </div>
 
   <!-- =================================================================== -->
-  <!-- 4. JavaScript                                                       -->
+  <!-- 5. JavaScript                                                       -->
   <!-- =================================================================== -->
   <script>
   /* ---------- siłowniki ------------------------------------------------ */
-  const grid = document.getElementById('actuatorGrid');
-  for(let i=1;i<=4;i++){
-    grid.insertAdjacentHTML('beforeend',`
-      <div class="actuator">
-        <h3>Siłownik ${i}</h3>
-        <div class="actuator-buttons">
-          <button class="btn btn-up"   onclick="toggleActuator(${i},'extend')">⬆</button>
-          <button class="btn btn-down" onclick="toggleActuator(${i},'retract')">⬇</button>
-          <button class="btn btn-stop" onclick="toggleActuator(${i},'stop')">STOP</button>
-        </div>
-      </div>`);
-  }
   function toggleActuator(id, action){
-    fetch('/' + action + '_' + id).catch(err=>console.warn('fetch actuator:', err));
+    // fetch('/' + action + '_' + id); // pozostawione na później
+    console.log(`[symulacja] /${action}_${id}`);
   }
 
-  /* ---------- pobieranie danych z ESP‑32 ------------------------------ */
-  function fetchSensorData(){
-    fetch('/sensor')
-      .then(resp => resp.json())
-      .then(updateDisplay)
-      .catch(err => console.error('Błąd fetch /sensor:', err));
+  /* ---------- CSV & odtwarzanie --------------------------------------- */
+  let csvData = [];
+  let rowIdx  = 0;
+  const intervalMs = 100;
+
+  document.getElementById('csvFile').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file){return;}
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      csvData = parseCSV(ev.target.result);
+      rowIdx  = 0;
+      console.log(`Wczytano ${csvData.length} wierszy CSV`);
+    };
+    reader.readAsText(file,'utf-8');
+  });
+
+  function parseCSV(text){
+    const lines  = text.trim().split(/\r?\n/);
+    const header = lines.shift().split(',').map(s=>s.trim());
+    return lines.map(line=>{
+      const cols = line.split(',').map(s=>s.trim());
+      const obj  = {};
+      header.forEach((h,i)=>{ obj[h] = parseFloat(cols[i]); });
+      return obj;
+    });
   }
 
   /* ---------- prezentacja danych -------------------------------------- */
   const cube = document.getElementById('cube');
 
   function updateDisplay(d){
-    const num = (id,val)=>{document.getElementById(id).textContent = (+val).toFixed(2);};
+    const num = (id,val)=>{document.getElementById(id).textContent = val.toFixed(2);}
     num('temperature',d.temperature);
     num('humidity',   d.humidity);
     num('accel_x',    d.accel_x);
@@ -121,19 +158,31 @@
     updateCubeOrientation(d);
   }
 
-  // ----- przeliczanie przyspieszeń -> nachylenie bryły -----------------
+  // ----- przeliczanie przyspieszeń -> nachylenie bryły -------------------
   function updateCubeOrientation(d){
+    /* przyjmujemy, że:
+         - oś X: prawa+ / lewa–
+         - oś Y: przód+ / tył–
+         - oś Z: w górę = +1 g w spoczynku
+       pitch = obrót wokół osi X (pozycja "dziobu")
+       roll  = obrót wokół osi Y (przechył boczny)
+    */
+    const toDeg = 180/Math.PI;
     const ax = d.accel_x, ay = d.accel_y, az = d.accel_z;
-    const pitch = Math.atan2(ax, Math.sqrt(ay*ay + az*az)) * 180/Math.PI; // rotX
-    const roll  = Math.atan2(ay, Math.sqrt(ax*ax + az*az)) * 180/Math.PI; // rotY
-    const yaw   = 0; // brak magnetometru
+
+    const pitch = Math.atan2(ax, Math.sqrt(ay*ay + az*az)) * toDeg; // rotX
+    const roll  = Math.atan2(ay, Math.sqrt(ax*ax + az*az)) * toDeg; // rotY
+    const yaw   = 0; // brak informacji z samego akcelerometru
 
     cube.style.transform = `rotateX(${pitch}deg) rotateY(${roll}deg) rotateZ(${yaw}deg)`;
   }
 
   /* ---------- pętla odświeżania --------------------------------------- */
-  setInterval(fetchSensorData, 100); // co 100 ms
-  fetchSensorData();                 // pierwszy odczyt od razu
+  setInterval(()=>{
+    if(csvData.length===0){return;}
+    updateDisplay(csvData[rowIdx]);
+    rowIdx = (rowIdx + 1) % csvData.length;
+  }, intervalMs);
   </script>
 </body>
 </html>
