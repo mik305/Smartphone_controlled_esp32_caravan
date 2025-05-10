@@ -15,12 +15,14 @@ void app_main(void) {
 
     wifi_init_softap();
     actuator_pwm_init();
-    hdc1080_sensor_init();
-    lsm6dsox_sensor_init();
+    hdc1080_sensor_init();  // Inicjalizacja I2C tutaj
+    lsm6dsox_sensor_init(); // Używa tej samej magistrali I2C
     start_webserver();
 
     xTaskCreate(hdc1080_task, "hdc1080_task", 4096, NULL, 5, NULL);
     xTaskCreate(lsm6dsox_task, "lsm6dsox_task", 4096, NULL, 5, NULL);
 }
+
+
 
 

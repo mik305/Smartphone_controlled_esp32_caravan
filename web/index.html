@@ -12,14 +12,8 @@
       background-color: #f4f4f4;
     }
 
-    h1, h3 {
+    h1 {
       text-align: center;
-    }
-
-    #sensorData {
-      text-align: center;
-      font-size: 1.2em;
-      margin-bottom: 30px;
     }
 
     #actuatorGrid {
@@ -28,6 +22,7 @@
       gap: 20px;
       max-width: 1000px;
       margin: auto;
+      margin-top: 30px;
     }
 
     .actuator {
@@ -74,80 +69,71 @@
     .btn span {
       font-size: 20px;
     }
+
+    #sensorData {
+      text-align: center;
+      font-size: 1.1em;
+      margin-top: 50px;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
   <h1>System poziomowania przyczepy kempingowej - tryb ręczny</h1>
-  
 
   <div id="actuatorGrid">
-    <!-- Siłownik 1 -->
+    <!-- Siłowniki 1-4 -->
     <div class="actuator">
       <h3>Siłownik 1</h3>
       <div class="actuator-buttons">
-        <button class="btn btn-up" onclick="toggleActuator(1, 'extend')">
-          <span>⬆</span>
-        </button>
-        <button class="btn btn-down" onclick="toggleActuator(1, 'retract')">
-          <span>⬇</span>
-        </button>
-        <button class="btn btn-stop" onclick="toggleActuator(1, 'stop')">
-          STOP
-        </button>
+        <button class="btn btn-up" onclick="toggleActuator(1, 'extend')">⬆</button>
+        <button class="btn btn-down" onclick="toggleActuator(1, 'retract')">⬇</button>
+        <button class="btn btn-stop" onclick="toggleActuator(1, 'stop')">STOP</button>
       </div>
     </div>
 
-    <!-- Siłownik 2 -->
     <div class="actuator">
       <h3>Siłownik 2</h3>
       <div class="actuator-buttons">
-        <button class="btn btn-up" onclick="toggleActuator(2, 'extend')">
-          <span>⬆</span>
-        </button>
-        <button class="btn btn-down" onclick="toggleActuator(2, 'retract')">
-          <span>⬇</span>
-        </button>
-        <button class="btn btn-stop" onclick="toggleActuator(2, 'stop')">
-          STOP
-        </button>
+        <button class="btn btn-up" onclick="toggleActuator(2, 'extend')">⬆</button>
+        <button class="btn btn-down" onclick="toggleActuator(2, 'retract')">⬇</button>
+        <button class="btn btn-stop" onclick="toggleActuator(2, 'stop')">STOP</button>
       </div>
     </div>
 
-    <!-- Siłownik 3 -->
     <div class="actuator">
       <h3>Siłownik 3</h3>
       <div class="actuator-buttons">
-        <button class="btn btn-up" onclick="toggleActuator(3, 'extend')">
-          <span>⬆</span>
-        </button>
-        <button class="btn btn-down" onclick="toggleActuator(3, 'retract')">
-          <span>⬇</span>
-        </button>
-        <button class="btn btn-stop" onclick="toggleActuator(3, 'stop')">
-          STOP
-        </button>
+        <button class="btn btn-up" onclick="toggleActuator(3, 'extend')">⬆</button>
+        <button class="btn btn-down" onclick="toggleActuator(3, 'retract')">⬇</button>
+        <button class="btn btn-stop" onclick="toggleActuator(3, 'stop')">STOP</button>
       </div>
     </div>
 
-    <!-- Siłownik 4 -->
     <div class="actuator">
       <h3>Siłownik 4</h3>
       <div class="actuator-buttons">
-        <button class="btn btn-up" onclick="toggleActuator(4, 'extend')">
-          <span>⬆</span>
-        </button>
-        <button class="btn btn-down" onclick="toggleActuator(4, 'retract')">
-          <span>⬇</span>
-        </button>
-        <button class="btn btn-stop" onclick="toggleActuator(4, 'stop')">
-          STOP
-        </button>
+        <button class="btn btn-up" onclick="toggleActuator(4, 'extend')">⬆</button>
+        <button class="btn btn-down" onclick="toggleActuator(4, 'retract')">⬇</button>
+        <button class="btn btn-stop" onclick="toggleActuator(4, 'stop')">STOP</button>
       </div>
     </div>
   </div>
 
-  <h3>Dane z czujnika:</h3>
-  <div id='sensorData'>Ładowanie...</div>
+  <!-- Czujniki na dole strony -->
+  <div id="sensorData">
+    <h3>Dane z czujników:</h3>
+    <p>Temperatura: <span id="temperature">--</span> °C</p>
+    <p>Wilgotność: <span id="humidity">--</span> %</p>
+    <p>Akcelerometr: X: <span id="accel_x">--</span> g, Y: <span id="accel_y">--</span> g, Z: <span id="accel_z">--</span> g</p>
+    <p>Żyroskop: X: <span id="gyro_x">--</span> °/s, Y: <span id="gyro_y">--</span> °/s, Z: <span id="gyro_z">--</span> °/s</p>
+  </div>
 
   <script>
     function toggleActuator(id, action) {
@@ -158,13 +144,23 @@
       fetch('/sensor')
         .then(resp => resp.json())
         .then(data => {
-          document.getElementById('sensorData').innerHTML =
-            `Temperatura: ${data.temperature} °C<br>Wilgotność: ${data.humidity} %`;
+          document.getElementById('temperature').textContent = data.temperature.toFixed(2);
+          document.getElementById('humidity').textContent = data.humidity.toFixed(2);
+
+          document.getElementById('accel_x').textContent = data.accel_x.toFixed(2);
+          document.getElementById('accel_y').textContent = data.accel_y.toFixed(2);
+          document.getElementById('accel_z').textContent = data.accel_z.toFixed(2);
+
+          document.getElementById('gyro_x').textContent = data.gyro_x.toFixed(2);
+          document.getElementById('gyro_y').textContent = data.gyro_y.toFixed(2);
+          document.getElementById('gyro_z').textContent = data.gyro_z.toFixed(2);
         });
     }
 
-    setInterval(fetchSensorData, 1000);
+    setInterval(fetchSensorData, 10); // Co 100 ms
     fetchSensorData();
   </script>
 </body>
 </html>
+
+
