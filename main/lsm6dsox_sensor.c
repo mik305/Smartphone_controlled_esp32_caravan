@@ -49,11 +49,7 @@ void lsm6dsox_task(void *pvParameters) {
         for(int i=0; i<3; i++) {
             accel_g[i] = accel[i] * 0.244e-3; // ±8g zakres
             gyro_dps[i] = gyro[i] * 70.0e-3;  // ±2000 dps zakres
-        }
-        
-        ESP_LOGI(TAG, "Accel: X:%.2fg Y:%.2fg Z:%.2fg | Gyro: X:%.2f°/s Y:%.2f°/s Z:%.2f°/s",
-                accel_g[0], accel_g[1], accel_g[2],
-                gyro_dps[0], gyro_dps[1], gyro_dps[2]);
+        }        
         
         vTaskDelay(pdMS_TO_TICKS(10));
     }

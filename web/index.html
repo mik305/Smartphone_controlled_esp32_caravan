@@ -133,6 +133,11 @@
     <p>Wilgotność: <span id="humidity">--</span> %</p>
     <p>Akcelerometr: X: <span id="accel_x">--</span> g, Y: <span id="accel_y">--</span> g, Z: <span id="accel_z">--</span> g</p>
     <p>Żyroskop: X: <span id="gyro_x">--</span> °/s, Y: <span id="gyro_y">--</span> °/s, Z: <span id="gyro_z">--</span> °/s</p>
+    <p>Odległości:</p>
+    <p>S1: <span id="distance_1">--</span> cm</p> 
+    <p>S2: <span id="distance_2">--</span> cm</p> 
+    <p>S3: <span id="distance_3">--</span> cm</p> 
+    <p>S4: <span id="distance_4">--</span> cm</p>
   </div>
 
   <script>
@@ -144,6 +149,7 @@
       fetch('/sensor')
         .then(resp => resp.json())
         .then(data => {
+
           document.getElementById('temperature').textContent = data.temperature.toFixed(2);
           document.getElementById('humidity').textContent = data.humidity.toFixed(2);
 
@@ -154,6 +160,11 @@
           document.getElementById('gyro_x').textContent = data.gyro_x.toFixed(2);
           document.getElementById('gyro_y').textContent = data.gyro_y.toFixed(2);
           document.getElementById('gyro_z').textContent = data.gyro_z.toFixed(2);
+
+          document.getElementById('distance_1').textContent = data.distance_1.toFixed(2);
+          document.getElementById('distance_2').textContent = data.distance_2.toFixed(2);
+          document.getElementById('distance_3').textContent = data.distance_3.toFixed(2);
+          document.getElementById('distance_4').textContent = data.distance_4.toFixed(2);
         });
     }
 
@@ -162,5 +173,7 @@
   </script>
 </body>
 </html>
+
+
 
 
