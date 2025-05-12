@@ -5,7 +5,7 @@
 #include "actuator_control.h"
 #include <string.h>
 #include "esp_log.h"
-#include "bmi323_sensor.h"
+//#include "bmi323_sensor.h"
 
 extern const uint8_t index_html_start[] asm("_binary_index_html_start");
 extern const uint8_t index_html_end[]   asm("_binary_index_html_end");
@@ -19,23 +19,20 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
 
 static esp_err_t sensor_get_handler(httpd_req_t *req) {
     char resp[500];
-    snprintf(resp, sizeof(resp), 
-            "{\"temperature\":%.2f,\"humidity\":%.2f,"
-            "\"accel_x\":%.2f,\"accel_y\":%.2f,\"accel_z\":%.2f,"
-            "\"gyro_x\":%.2f,\"gyro_y\":%.2f,\"gyro_z\":%.2f,"
-            "\"bmi323_accel_x\":%.2f,\"bmi323_accel_y\":%.2f,\"bmi323_accel_z\":%.2f,"
-            "\"bmi323_gyro_x\":%.2f,\"bmi323_gyro_y\":%.2f,\"bmi323_gyro_z\":%.2f,"
-            "\"distance_1\":%.2f,\"distance_2\":%.2f,"
-            "\"distance_3\":%.2f,\"distance_4\":%.2f}", 
-            latest_temp, latest_hum,
-            accel_g[0], accel_g[1], accel_g[2],
-            gyro_dps[0], gyro_dps[1], gyro_dps[2],
-            bmi323_accel_g[0], bmi323_accel_g[1], bmi323_accel_g[2],
-            bmi323_gyro_dps[0], bmi323_gyro_dps[1], bmi323_gyro_dps[2],
-            hcsr04_sensors[0].distance_cm,
-            hcsr04_sensors[1].distance_cm,
-            hcsr04_sensors[2].distance_cm,
-            hcsr04_sensors[3].distance_cm);
+    snprintf(resp, sizeof(resp),
+    "{\"temperature\":%.2f,\"humidity\":%.2f,"
+    "\"accel_x\":%.2f,\"accel_y\":%.2f,\"accel_z\":%.2f,"
+    "\"gyro_x\":%.2f,\"gyro_y\":%.2f,\"gyro_z\":%.2f,"
+    "\"distance_1\":%.2f,\"distance_2\":%.2f,"
+    "\"distance_3\":%.2f,\"distance_4\":%.2f}",
+    (double)latest_temp, (double)latest_hum,
+    (double)accel_g[0],  (double)accel_g[1],  (double)accel_g[2],
+    (double)gyro_dps[0], (double)gyro_dps[1], (double)gyro_dps[2],
+    (double)hcsr04_sensors[0].distance_cm,
+    (double)hcsr04_sensors[1].distance_cm,
+    (double)hcsr04_sensors[2].distance_cm,
+    (double)hcsr04_sensors[3].distance_cm);
+
     httpd_resp_set_type(req, "application/json");
     httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;

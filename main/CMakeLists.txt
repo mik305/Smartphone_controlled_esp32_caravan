@@ -5,8 +5,17 @@ idf_component_register(SRCS "main.c"
                       "hdc1080_sensor.c"
                       "lsm6dsox_sensor.c"
                       "hcsr04_sensor.c"
-                      "bmi323_sensor.c"
-                      INCLUDE_DIRS ".")
+			"bmi323_port.c"
+                      INCLUDE_DIRS "."
+
+		REQUIRES BMI323_SensorAPI
+              esp_wifi         # ← dodaj
+              esp_netif        # wifi_ap.h zwykle go używa
+              nvs_flash        # jeśli korzystasz z NVS
+		driver
+		esp_timer
+		esp_http_server
+)
 
 set(web_dir "${CMAKE_CURRENT_SOURCE_DIR}/../web")
 file(WRITE "${CMAKE_BINARY_DIR}/web/index.html.txt" "")

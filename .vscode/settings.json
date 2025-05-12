@@ -5,5 +5,10 @@
     "idf.openOcdConfigs": [
         "board/esp32-wrover-kit-3.3v.cfg"
     ],
-    "idf.toolsPathWin": "c:\\ESP\\tools"
+    "idf.toolsPathWin": "c:\\ESP\\tools",
+    "files.associations": {
+        "lsm6dsox_sensor.h": "c",
+        "hcsr04_sensor.h": "c",
+        "nvs_flash.h": "c"
+    }
 }
