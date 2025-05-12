@@ -5,6 +5,7 @@ idf_component_register(SRCS "main.c"
                       "hdc1080_sensor.c"
                       "lsm6dsox_sensor.c"
                       "hcsr04_sensor.c"
+                      "bmi323_sensor.c"
                       INCLUDE_DIRS ".")
 
 set(web_dir "${CMAKE_CURRENT_SOURCE_DIR}/../web")
