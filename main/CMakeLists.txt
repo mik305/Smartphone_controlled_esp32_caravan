@@ -1,4 +1,4 @@
-idf_component_register(SRCS "main.c" 
+idf_component_register(SRCS "bmi323_sensor.c" "main.c" 
                       "wifi_ap.c" 
                       "http_server.c" 
                       "actuator_control.c" 
