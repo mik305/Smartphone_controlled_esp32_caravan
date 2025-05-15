@@ -142,6 +142,6 @@ void bmi323_temp_task(void *pv)
                  "T=%.1f°C | ACC=%.3f %.3f %.3f g | GYR=%.1f %.1f %.1f dps",
                  T, ax, ay, az, gx, gy, gz);
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
