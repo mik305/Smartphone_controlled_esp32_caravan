@@ -30,7 +30,7 @@ static void hdc1080_read(float *temperature, float *humidity) {
     uint16_t raw_temp = (data[0] << 8) | data[1];
     uint16_t raw_humi = (data[2] << 8) | data[3];
 
-    *temperature = ((float)raw_temp / 65536.0f) * 165.0f - 40.0f;
+    *temperature = ((float)raw_temp / 65536.0f) * 165.0f - 46.0f;
     *humidity = ((float)raw_humi / 65536.0f) * 100.0f;
 }
 
@@ -40,7 +40,6 @@ void hdc1080_task(void *pvParameters) {
         hdc1080_read(&temp, &hum);
         latest_temp = temp;
         latest_hum = hum;
-        ESP_LOGI("HDC1080", "Temperatura: %.2f C, Wilgotność: %.2f %%", temp, hum);
         vTaskDelay(pdMS_TO_TICKS(980));
     }
 }
