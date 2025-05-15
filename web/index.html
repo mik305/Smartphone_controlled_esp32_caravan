@@ -59,11 +59,6 @@
   <!-- =================================================================== -->
   <div id="sensorData">
     <h3>Dane z czujników:</h3>
-    <p>Temperatura: <span id="temperature">--</span> °C</p>
-    <p>Wilgotność: <span id="humidity">--</span> %</p>
-    <p>Akcelerometr: X = <span id="accel_x">--</span> g,&nbsp; Y = <span id="accel_y">--</span> g,&nbsp; Z = <span id="accel_z">--</span> g</p>
-    <p>Żyroskop: X = <span id="gyro_x">--</span> °/s,&nbsp; Y = <span id="gyro_y">--</span> °/s,&nbsp; Z = <span id="gyro_z">--</span> °/s</p>
-    <p>Odległości:&nbsp;
     <p>HDC1080 Wilgotność: <span id="humidity">--</span> %</p>
     <p>HDC1080 Temperatura: <span id="temperature">--</span> °C</p>
     <p>BMI323 Temperatura: <span id="bmi323_temp">--</span> %</p>
@@ -135,6 +130,7 @@
     const pitch = Math.atan2(ax, Math.sqrt(ay*ay + az*az)) * 180/Math.PI; // rotX
     const roll  = Math.atan2(ay, Math.sqrt(ax*ax + az*az)) * 180/Math.PI; // rotY
     const yaw   = 0; // brak magnetometru
+  }
 
 function updateDisplay(d){
   const num = (id,val)=>{document.getElementById(id).textContent = (+val).toFixed(2);};
@@ -183,11 +179,4 @@ function updateDisplay(d){
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
+  
