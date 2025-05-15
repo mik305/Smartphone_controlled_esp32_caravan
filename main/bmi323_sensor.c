@@ -1,130 +1,147 @@
 #include "bmi323_sensor.h"
-#include "freertos/task.h"
+#include "driver/i2c.h"
 #include "esp_log.h"
-#include <stdio.h>
+#include "esp_rom_sys.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include <string.h>
+#include <math.h>
 
-static const char *TAG = "BMI323";
 
-volatile float bmi323_accel_g[3] = {0.0f, 0.0f, 0.0f};
-volatile float bmi323_gyro_dps[3] = {0.0f, 0.0f, 0.0f};
-volatile float bmi323_temp = 0.0f;
+#define TAG           "BMI323"
+#define BMI323_ADDR   0x69
+#define I2C_PORT      I2C_NUM_0
 
-static esp_err_t bmi323_write_reg(uint8_t reg, uint16_t value) {
-    uint8_t data[3] = {reg, (uint8_t)(value & 0xFF), (uint8_t)(value >> 8)};
-    return i2c_master_write_to_device(BMI323_I2C_NUM, BMI323_I2C_ADDR, data, sizeof(data), 100 / portTICK_PERIOD_MS);
+static struct bmi3_dev dev;
+
+volatile float bmi323_accel_g[3]  = {0};   /* X Y Z g */
+volatile float bmi323_gyro_dps[3] = {0};   /* X Y Z °/s */
+volatile float bmi323_temp_c      = 0.0f;  
+
+/* ───────── I²C callbacks ───────── */
+static int8_t i2c_read(uint8_t reg, uint8_t *data,
+                       uint32_t len, void *intf_ptr)
+{
+    return i2c_master_write_read_device(I2C_PORT, BMI323_ADDR,
+                                        &reg, 1, data, len,
+                                        100 / portTICK_PERIOD_MS) == ESP_OK ? 0 : -1;
+}
+static int8_t i2c_write(uint8_t reg, const uint8_t *data,
+                        uint32_t len, void *intf_ptr)
+{
+    uint8_t buf[len + 1];
+    buf[0] = reg;
+    memcpy(&buf[1], data, len);
+    return i2c_master_write_to_device(I2C_PORT, BMI323_ADDR,
+                                      buf, len + 1,
+                                      100 / portTICK_PERIOD_MS) == ESP_OK ? 0 : -1;
+}
+static void delay_us(uint32_t us, void *ctx) { esp_rom_delay_us(us); }
+
+/* ───────── init ───────── */
+esp_err_t bmi323_temp_init(void)
+{
+    uint8_t addr = BMI323_ADDR;
+
+    dev.intf           = BMI3_I2C_INTF;
+    dev.read           = i2c_read;
+    dev.write          = i2c_write;
+    dev.delay_us       = delay_us;
+    dev.intf_ptr       = &addr;
+    dev.read_write_len = 32;
+
+    if (bmi323_init(&dev) != BMI323_OK) {
+        ESP_LOGE(TAG, "bmi323_init failed");
+        return ESP_FAIL;
+    }
+
+    /* Akcelerometr NORMAL 100 Hz ±2 g */
+    struct bmi3_sens_config cfg_acc = { 0 };
+    cfg_acc.type             = BMI323_ACCEL;
+    cfg_acc.cfg.acc.acc_mode = BMI3_ACC_MODE_NORMAL;
+    cfg_acc.cfg.acc.odr      = BMI3_ACC_ODR_100HZ;
+    cfg_acc.cfg.acc.range    = BMI3_ACC_RANGE_2G;
+    cfg_acc.cfg.acc.bwp      = BMI3_ACC_BW_ODR_QUARTER;
+
+    /* Żyroskop NORMAL 100 Hz ±1000 dps */
+    struct bmi3_sens_config cfg_gyr = { 0 };
+    cfg_gyr.type             = BMI323_GYRO;
+    cfg_gyr.cfg.gyr.gyr_mode = BMI3_GYR_MODE_NORMAL;
+    cfg_gyr.cfg.gyr.odr      = BMI3_GYR_ODR_100HZ;
+    cfg_gyr.cfg.gyr.range    = BMI3_GYR_RANGE_1000DPS;
+    //cfg_gyr.cfg.gyr.bwp      = BMI3_GYR_BW_ODR_1;
+
+    if (bmi323_set_sensor_config(&cfg_acc, 1, &dev) != BMI323_OK ||
+        bmi323_set_sensor_config(&cfg_gyr, 1, &dev) != BMI323_OK) {
+        ESP_LOGE(TAG, "set cfg failed");
+        return ESP_FAIL;
+    }
+
+    ESP_LOGI(TAG, "BMI323 OK: temp, acc, gyro aktywne");
+    return ESP_OK;
 }
 
-static esp_err_t bmi323_read_reg(uint8_t reg, uint16_t *value) {
-    uint8_t data[2];
-    esp_err_t ret = i2c_master_write_read_device(BMI323_I2C_NUM, BMI323_I2C_ADDR, &reg, 1, data, 2, 100 / portTICK_PERIOD_MS);
-    *value = (data[1] << 8) | data[0];
-    return ret;
-}
+/* ───────── pomocnicze konwersje ───────── */
+static inline float raw_to_g(int16_t raw)     { return raw / 16384.0f; }   /* ±2 g */
+static inline float raw_to_dps(int16_t raw)   { return raw / 32.768f;  }   /* ±1000 dps */
 
-static void bmi323_print_registers(void) {
-    uint16_t reg_values[0x30];
-    
-    ESP_LOGI(TAG, "BMI323 Register Dump:");
-    for (int i = 0; i < 0x30; i++) {
-        if (bmi323_read_reg(i, &reg_values[i]) == ESP_OK) {
-            ESP_LOGI(TAG, "0x%02X: 0x%04X", i, reg_values[i]);
-        } else {
-            ESP_LOGE(TAG, "Failed to read register 0x%02X", i);
+/* ───────── task ───────── */
+void bmi323_temp_task(void *pv)
+{
+    (void)pv;
+
+    struct bmi3_sensor_data acc = { .type = BMI3_ACCEL };
+    struct bmi3_sensor_data gyr = { .type = BMI3_GYRO  };
+    uint16_t raw_t = 0;
+    bool first = true;
+    while (true)
+    {
+        //pominięcie pierwszego printa, bo zawierał domyslne wartosci rejestrow
+        if (first) {
+            first = false;
+            // poczekaj 100 ms, wyrzuć początkowe “śmieci”
+            vTaskDelay(pdMS_TO_TICKS(100));
+            // opcjonalnie: jeden dummy-read, żeby wyrzucić rejestry
+            bmi323_get_temperature_data(&raw_t, &dev);
+            bmi323_get_sensor_data(&acc, 1, &dev);
+            bmi323_get_sensor_data(&gyr, 1, &dev);
+            continue;
         }
-    }
-}
 
-void bmi323_init(void) {
-    uint16_t chip_id;
-    
-    // Sprawdzenie ID czujnika (powinno być 0x0043)
-    ESP_ERROR_CHECK(bmi323_read_reg(BMI323_CHIP_ID, &chip_id));
-    ESP_LOGI(TAG, "BMI323 Chip ID: 0x%04X", chip_id);
-
-    if ((chip_id & 0xFF) != 0x43) {
-        ESP_LOGE(TAG, "Invalid BMI323 Chip ID!");
-        return;
-    }
-
-    // Reset
-    ESP_ERROR_CHECK(bmi323_write_reg(BMI323_CMD, BMI323_SOFT_RESET_CMD));
-    vTaskDelay(pdMS_TO_TICKS(100));
-
-    // Konfiguracja akcelerometru (100Hz, ±8g)
-    uint16_t acc_conf = BMI323_ACC_RANGE_8G | BMI323_ACC_ODR_100HZ;
-    ESP_ERROR_CHECK(bmi323_write_reg(BMI323_ACC_CONF, acc_conf));
-    
-    // Konfiguracja żyroskopu (100Hz, ±1000dps)
-    uint16_t gyr_conf = BMI323_GYR_RANGE_1000DPS | BMI323_GYR_ODR_100HZ;
-    ESP_ERROR_CHECK(bmi323_write_reg(BMI323_GYR_CONF, gyr_conf));
-
-    // Włączenie normalnego trybu pracy
-    ESP_ERROR_CHECK(bmi323_write_reg(BMI323_PWR_CTRL, BMI323_NORMAL_MODE));
-    vTaskDelay(pdMS_TO_TICKS(50));
-
-    // Wyświetlenie informacji diagnostycznych
-    bmi323_print_registers();
-    ESP_LOGI(TAG, "BMI323 initialized");
-}
-
-static void bmi323_read_sensor_data() {
-    uint16_t acc_x, acc_y, acc_z;
-    uint16_t gyr_x, gyr_y, gyr_z;
-    uint16_t temp;
-
-    // Odczyt danych akcelerometru
-    ESP_ERROR_CHECK(bmi323_read_reg(BMI323_ACC_DATA_X, &acc_x));
-    ESP_ERROR_CHECK(bmi323_read_reg(BMI323_ACC_DATA_Y, &acc_y));
-    ESP_ERROR_CHECK(bmi323_read_reg(BMI323_ACC_DATA_Z, &acc_z));
-    
-    // Odczyt danych żyroskopu
-    ESP_ERROR_CHECK(bmi323_read_reg(BMI323_GYR_DATA_X, &gyr_x));
-    ESP_ERROR_CHECK(bmi323_read_reg(BMI323_GYR_DATA_Y, &gyr_y));
-    ESP_ERROR_CHECK(bmi323_read_reg(BMI323_GYR_DATA_Z, &gyr_z));
-    
-    // Odczyt temperatury
-    ESP_ERROR_CHECK(bmi323_read_reg(BMI323_TEMP_DATA, &temp));
-
-    // Konwersja na wartości fizyczne
-    // Akcelerometr: ±8g, 16-bit (32768 = 8g)
-    bmi323_accel_g[0] = (int16_t)acc_x * (8.0f / 32768.0f);
-    bmi323_accel_g[1] = (int16_t)acc_y * (8.0f / 32768.0f);
-    bmi323_accel_g[2] = (int16_t)acc_z * (8.0f / 32768.0f);
-    
-    // Żyroskop: ±1000dps, 16-bit (32768 = 1000dps)
-    bmi323_gyro_dps[0] = (int16_t)gyr_x * (1000.0f / 32768.0f);
-    bmi323_gyro_dps[1] = (int16_t)gyr_y * (1000.0f / 32768.0f);
-    bmi323_gyro_dps[2] = (int16_t)gyr_z * (1000.0f / 32768.0f);
-    
-    // Temperatura: 0x8000 = 23°C, LSB = 0.125°C
-    bmi323_temp = 23.0f + ((int16_t)temp - 0x8000) * 0.125f;
-}
-
-void bmi323_print_debug_info(void) {
-    uint16_t status, err_reg;
-    ESP_ERROR_CHECK(bmi323_read_reg(BMI323_STATUS, &status));
-    ESP_ERROR_CHECK(bmi323_read_reg(BMI323_ERR_REG, &err_reg));
-
-    ESP_LOGI(TAG, "Status: 0x%04X, Error: 0x%04X", status, err_reg);
-    ESP_LOGI(TAG, "Accel: X=%.2fg, Y=%.2fg, Z=%.2fg", 
-             bmi323_accel_g[0], bmi323_accel_g[1], bmi323_accel_g[2]);
-    ESP_LOGI(TAG, "Gyro: X=%.2f°/s, Y=%.2f°/s, Z=%.2f°/s", 
-             bmi323_gyro_dps[0], bmi323_gyro_dps[1], bmi323_gyro_dps[2]);
-    ESP_LOGI(TAG, "Temperature: %.2f°C", bmi323_temp);
-}
-
-void bmi323_task(void *pvParameters) {
-    while (1) {
-        bmi323_read_sensor_data();
-        
-        // Wyświetlanie danych co 2 sekundy (opcjonalne)
-        static int count = 0;
-        if (++count >= 200) {
-            bmi323_print_debug_info();
-            count = 0;
+        /* temperatura */
+        if (bmi323_get_temperature_data(&raw_t, &dev) != BMI323_OK) {
+            ESP_LOGW(TAG, "temp read err");
         }
-        
-        vTaskDelay(pdMS_TO_TICKS(10)); // 100Hz update rate
+        float T = (int16_t)raw_t / 512.0f + 17.0f;
+        bmi323_temp_c = T;
+
+        /* akcelerometr */
+        float ax = NAN, ay = NAN, az = NAN;
+        if (bmi323_get_sensor_data(&acc, 1, &dev) == BMI323_OK) {
+            ax = raw_to_g(acc.sens_data.acc.x);
+            ay = raw_to_g(acc.sens_data.acc.y);
+            az = raw_to_g(acc.sens_data.acc.z);
+            bmi323_accel_g[0]  = ax;
+            bmi323_accel_g[1]  = ay;
+            bmi323_accel_g[2]  = az;
+        }
+
+        /* żyroskop */
+        float gx = NAN, gy = NAN, gz = NAN;
+        if (bmi323_get_sensor_data(&gyr, 1, &dev) == BMI323_OK) {
+            gx = raw_to_dps(gyr.sens_data.gyr.x);
+            gy = raw_to_dps(gyr.sens_data.gyr.y);
+            gz = raw_to_dps(gyr.sens_data.gyr.z);
+            bmi323_gyro_dps[0] = gx;
+            bmi323_gyro_dps[1] = gy;
+            bmi323_gyro_dps[2] = gz;
+        }
+
+        /* log */
+        ESP_LOGI(TAG,
+                 "T=%.1f°C | ACC=%.3f %.3f %.3f g | GYR=%.1f %.1f %.1f dps",
+                 T, ax, ay, az, gx, gy, gz);
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
-

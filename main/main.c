@@ -20,8 +20,6 @@ void app_main(void) {
     hcsr04_sensor_init();
     hdc1080_sensor_init();  // Inicjalizacja I2C tutaj
     lsm6dsox_sensor_init(); // Używa tej samej magistrali I2C
-    bmi323_init();
-    
 
     start_webserver();
 
@@ -29,8 +27,8 @@ void app_main(void) {
     xTaskCreate(hcsr04_task, "hcsr04_task", 4096, NULL, 5, NULL);
     xTaskCreate(hdc1080_task, "hdc1080_task", 4096, NULL, 5, NULL);
     xTaskCreate(lsm6dsox_task, "lsm6dsox_task", 4096, NULL, 5, NULL);
-    xTaskCreate(bmi323_task, "bmi323_task", 4096, NULL, 5, NULL);
-
+    if (bmi323_temp_init() == ESP_OK)
+        xTaskCreate(bmi323_temp_task, "bmi323T", 4096, NULL, 5, NULL);
 }
 
 

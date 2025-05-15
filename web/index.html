@@ -59,13 +59,14 @@
   <!-- =================================================================== -->
   <div id="sensorData">
     <h3>Dane z czujników:</h3>
-    <p>Temperatura: <span id="temperature">--</span> °C</p>
-    <p>Wilgotność: <span id="humidity">--</span> %</p>
-    <p>Akcelerometr: X = <span id="accel_x">--</span> g,&nbsp; Y = <span id="accel_y">--</span> g,&nbsp; Z = <span id="accel_z">--</span> g</p>
-    <p>Żyroskop: X = <span id="gyro_x">--</span> °/s,&nbsp; Y = <span id="gyro_y">--</span> °/s,&nbsp; Z = <span id="gyro_z">--</span> °/s</p>
+    <p>HDC1080 Wilgotność: <span id="humidity">--</span> %</p>
+    <p>HDC1080 Temperatura: <span id="temperature">--</span> °C</p>
+    <p>BMI323 Temperatura: <span id="bmi323_temp">--</span> %</p>
+    <p>LSM6DSOX Akcelerometr: X = <span id="accel_x">--</span> g,&nbsp; Y = <span id="accel_y">--</span> g,&nbsp; Z = <span id="accel_z">--</span> g</p>
+    <p>LSM6DSOX Żyroskop: X = <span id="gyro_x">--</span> °/s,&nbsp; Y = <span id="gyro_y">--</span> °/s,&nbsp; Z = <span id="gyro_z">--</span> °/s</p>
     <p>BMI323 Akcelerometr: X = <span id="bmi323_accel_x">--</span> g,&nbsp; Y = <span id="bmi323_accel_y">--</span> g,&nbsp; Z = <span id="bmi323_accel_z">--</span> g</p>
     <p>BMI323 Żyroskop: X = <span id="bmi323_gyro_x">--</span> °/s,&nbsp; Y = <span id="bmi323_gyro_y">--</span> °/s,&nbsp; Z = <span id="bmi323_gyro_z">--</span> °/s</p>
-    <p>Odległości:&nbsp;
+    <p>HC-SR04 (ultradźwiękowy) Odległości:&nbsp;
        S1 = <span id="distance_1">--</span> cm,&nbsp;
        S2 = <span id="distance_2">--</span> cm,&nbsp;
        S3 = <span id="distance_3">--</span> cm,&nbsp;
@@ -105,24 +106,37 @@
   /* ---------- prezentacja danych -------------------------------------- */
   const cube = document.getElementById('cube');
 
-  function updateDisplay(d){
-    const num = (id,val)=>{document.getElementById(id).textContent = (+val).toFixed(2);};
-    num('temperature',d.temperature);
-    num('humidity',   d.humidity);
-    num('accel_x',    d.accel_x);
-    num('accel_y',    d.accel_y);
-    num('accel_z',    d.accel_z);
-    num('gyro_x',     d.gyro_x);
-    num('gyro_y',     d.gyro_y);
-    num('gyro_z',     d.gyro_z);
-    num('distance_1', d.distance_1);
-    num('distance_2', d.distance_2);
-    num('distance_3', d.distance_3);
-    num('distance_4', d.distance_4);
+function updateDisplay(d){
+  const num = (id,val)=>{document.getElementById(id).textContent = (+val).toFixed(2);};
 
-    updateCubeOrientation(d);
-  }
+  num('temperature', d.temperature);
+  num('humidity',    d.humidity);
 
+  /* MPU-6050 / LSM6DSOX */
+  num('accel_x', d.accel_x);
+  num('accel_y', d.accel_y);
+  num('accel_z', d.accel_z);
+  num('gyro_x',  d.gyro_x);
+  num('gyro_y',  d.gyro_y);
+  num('gyro_z',  d.gyro_z);
+
+  /* ---------- BMI323 ---------- */
+  num('bmi323_accel_x', d.bmi323_accel_x);
+  num('bmi323_accel_y', d.bmi323_accel_y);
+  num('bmi323_accel_z', d.bmi323_accel_z);
+  num('bmi323_gyro_x',  d.bmi323_gyro_x);
+  num('bmi323_gyro_y',  d.bmi323_gyro_y);
+  num('bmi323_gyro_z',  d.bmi323_gyro_z);
+  num('bmi323_temp', d.bmi323_temp);
+
+  /* HC-SR04 */
+  num('distance_1', d.distance_1);
+  num('distance_2', d.distance_2);
+  num('distance_3', d.distance_3);
+  num('distance_4', d.distance_4);
+
+  updateCubeOrientation(d);
+}
   // ----- przeliczanie przyspieszeń -> nachylenie bryły -----------------
   function updateCubeOrientation(d){
     const ax = d.accel_x, ay = d.accel_y, az = d.accel_z;
