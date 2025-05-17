@@ -138,10 +138,10 @@ void bmi323_temp_task(void *pv)
         }
 
         /* log */
-        ESP_LOGI(TAG,
+        /*ESP_LOGI(TAG,
                  "T=%.1f°C | ACC=%.3f %.3f %.3f g | GYR=%.1f %.1f %.1f dps",
                  T, ax, ay, az, gx, gy, gz);
-
+*/
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }

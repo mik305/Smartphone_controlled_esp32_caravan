@@ -9,6 +9,8 @@ idf_component_register(
                       "lsm6dsox_sensor.c"
                       "hcsr04_sensor.c"
                       "bmi323_sensor.c"
+			"hx711.c" 
+			"loadcell.c"
 			INCLUDE_DIRS "."
              REQUIRES
         bmi323_api      # <-- nasz nowy komponent
@@ -17,7 +19,8 @@ idf_component_register(
 	esp_wifi 
 	esp_netif
 	nvs_flash
-esp_timer
+	esp_timer
+	esp_system
                               )
 
 set(web_dir "${CMAKE_CURRENT_SOURCE_DIR}/../web")

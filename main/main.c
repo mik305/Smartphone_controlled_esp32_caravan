@@ -6,6 +6,7 @@
 #include "lsm6dsox_sensor.h"
 #include "hcsr04_sensor.h"
 #include "bmi323_sensor.h"
+#include "hx711.h"
 
 void app_main(void) {
     esp_err_t ret = nvs_flash_init();
@@ -20,7 +21,7 @@ void app_main(void) {
     hcsr04_sensor_init();
     hdc1080_sensor_init();  // Inicjalizacja I2C tutaj
     lsm6dsox_sensor_init(); // Używa tej samej magistrali I2C
-
+    hx_start_task(); 
     start_webserver();
 
 
