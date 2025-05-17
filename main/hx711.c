@@ -4,7 +4,7 @@
 #include "esp_timer.h"
 
 static const char *TAG = "HX711";
-
+volatile float  hx_grams[4] = {0};  
 /*  pd_sck ↗ negedge → DATA wyrzuca kolejne bity (MSB first) */
 static inline void clk_pulse(gpio_num_t clk)
 {

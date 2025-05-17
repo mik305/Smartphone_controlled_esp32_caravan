@@ -3,9 +3,13 @@
 #include "hdc1080_sensor.h"
 #include "lsm6dsox_sensor.h"
 #include "actuator_control.h"
+#include "bmi323_sensor.h"
+#include "hx711.h"                   /* 1)  dodany  */
 #include <string.h>
 #include "esp_log.h"
-#include "bmi323_sensor.h"
+
+extern volatile float hx_raw[4];
+extern volatile float hx_grams[4];
 
 extern const uint8_t index_html_start[] asm("_binary_index_html_start");
 extern const uint8_t index_html_end[]   asm("_binary_index_html_end");
@@ -18,28 +22,31 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
 }
 
 static esp_err_t sensor_get_handler(httpd_req_t *req)
-{
-    char resp[512];
+{    
+    char resp[640];   /* wydłużony bufor */
 
-    snprintf(resp, sizeof(resp),
+   snprintf(resp, sizeof(resp),
         "{\"temperature\":%.2f,\"humidity\":%.2f,"
         "\"accel_x\":%.2f,\"accel_y\":%.2f,\"accel_z\":%.2f,"
         "\"gyro_x\":%.2f,\"gyro_y\":%.2f,\"gyro_z\":%.2f,"
-        "\"bmi323_temp\":%.2f," 
+        "\"bmi323_temp\":%.2f,"
         "\"bmi323_accel_x\":%.2f,\"bmi323_accel_y\":%.2f,\"bmi323_accel_z\":%.2f,"
         "\"bmi323_gyro_x\":%.2f,\"bmi323_gyro_y\":%.2f,\"bmi323_gyro_z\":%.2f,"
         "\"distance_1\":%.2f,\"distance_2\":%.2f,"
-        "\"distance_3\":%.2f,\"distance_4\":%.2f}",
+        "\"distance_3\":%.2f,\"distance_4\":%.2f,"
+        "\"loadcell_1\":%.2f,\"loadcell_2\":%.2f,\"loadcell_3\":%.2f,\"loadcell_4\":%.2f}",
         (double)latest_temp, (double)latest_hum,
         (double)accel_g[0],  (double)accel_g[1],  (double)accel_g[2],
         (double)gyro_dps[0], (double)gyro_dps[1], (double)gyro_dps[2],
-        (double)bmi323_temp_c,                               /* <-- NOWE */
+        (double)bmi323_temp_c,
         (double)bmi323_accel_g[0], (double)bmi323_accel_g[1], (double)bmi323_accel_g[2],
         (double)bmi323_gyro_dps[0], (double)bmi323_gyro_dps[1], (double)bmi323_gyro_dps[2],
         (double)hcsr04_sensors[0].distance_cm,
         (double)hcsr04_sensors[1].distance_cm,
         (double)hcsr04_sensors[2].distance_cm,
-        (double)hcsr04_sensors[3].distance_cm);
+        (double)hcsr04_sensors[3].distance_cm,
+        (double)hx_grams[0], (double)hx_grams[1],
+        (double)hx_grams[2], (double)hx_grams[3]);
 
     httpd_resp_set_type(req, "application/json");
     httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);

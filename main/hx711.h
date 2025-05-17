@@ -4,6 +4,8 @@
 #include "freertos/FreeRTOS.h" 
 #include "freertos/task.h"
 
+extern volatile float hx_grams[4];   /* aktualizowana w hx_task */
+
 /* tryb wzmacniacza */
 typedef enum {
     HX711_GAIN_128 = 1,   /* kanał A, gain 128 – domyślny */
@@ -16,6 +18,8 @@ typedef struct {
     gpio_num_t clk;
     gpio_num_t data;
     hx711_gain_t gain;
+    int32_t       offset;       /* surowa wartość przy 0 g */
+    float         lsb_per_g;    /* współczynnik skalowania */
 } hx711_t;
 
 /* API */
