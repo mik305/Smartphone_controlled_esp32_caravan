@@ -40,7 +40,7 @@ void hdc1080_task(void *pvParameters) {
         hdc1080_read(&temp, &hum);
         latest_temp = temp;
         latest_hum = hum;
-        ESP_LOGI("HDC1080", "Temperatura: %.2f C, Wilgotność: %.2f %%", temp, hum);
+        //ESP_LOGI("HDC1080", "Temperatura: %.2f C, Wilgotność: %.2f %%", temp, hum);
         vTaskDelay(pdMS_TO_TICKS(980));
     }
 }
