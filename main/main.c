@@ -7,6 +7,7 @@
 #include "hcsr04_sensor.h"
 #include "bmi323_sensor.h"
 #include "hx711.h"
+#include "vl6180x_sensor.h"
 
 void app_main(void) {
     esp_err_t ret = nvs_flash_init();
@@ -30,6 +31,9 @@ void app_main(void) {
     xTaskCreate(lsm6dsox_task, "lsm6dsox_task", 4096, NULL, 5, NULL);
     if (bmi323_temp_init() == ESP_OK)
         xTaskCreate(bmi323_temp_task, "bmi323T", 4096, NULL, 5, NULL);
+    
+    xTaskCreate(vl6180x_task, "vl6180_task", 4096, NULL, 5, NULL);
+
 }
 
 

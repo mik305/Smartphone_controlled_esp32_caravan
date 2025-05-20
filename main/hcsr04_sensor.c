@@ -145,9 +145,9 @@ void hcsr04_task(void *pv)
 
                 s->last_update = esp_timer_get_time();
 
-                ESP_LOGI("HCSR04",
-                         "Ch%d raw %.1f cm  |  filt %.1f cm",
-                         i+1, d, s->filt_cm);
+                //ESP_LOGI("HCSR04",
+                  //       "Ch%d raw %.1f cm  |  filt %.1f cm",
+                    //     i+1, d, s->filt_cm);
             }
             vTaskDelay(pdMS_TO_TICKS(60));  /*  ±60 ms przerwy między czujnikami */
         }
