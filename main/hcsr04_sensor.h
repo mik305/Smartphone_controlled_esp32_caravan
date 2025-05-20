@@ -1,6 +1,8 @@
 #ifndef HCSR04_SENSOR_H
 #define HCSR04_SENSOR_H
 
+#define HCSR04_ALPHA 0.2f
+
 #include <stdint.h>
 
 #define NUM_HCSR04_SENSORS 4
@@ -11,6 +13,7 @@ typedef struct {
     uint8_t trigger_pin;
     uint8_t echo_pin;
     float distance_cm;
+    float filt_cm;
     uint32_t last_update;
 } hcsr04_sensor_t;
 

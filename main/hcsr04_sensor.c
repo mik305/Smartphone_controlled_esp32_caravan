@@ -100,23 +100,58 @@ void hcsr04_set_active_sensor(uint8_t sensor_index) {
     }
 }
 
-void hcsr04_task(void *pvParameters) {
-    while (1) {
-        // Mierz tylko dla aktywnego czujnika
-        float distance = measure_distance(hcsr04_sensors[current_active_sensor].echo_pin);
-        if (distance > 0) {
-            hcsr04_sensors[current_active_sensor].distance_cm = distance;
-            hcsr04_sensors[current_active_sensor].last_update = esp_timer_get_time();
-        }
-        
-        // Dla pozostałych czujników ustaw 0
+/* ---------- w hcsr04_task() ------------------------------------------ */
+void hcsr04_task(void *pv)
+{
+    /* --- jednorazowa konfiguracja wspólnych pinów trigger --- */
+    for (int i = 0; i < NUM_HCSR04_SENSORS; i++) {
+        gpio_config_t trig = {
+            .pin_bit_mask = 1ULL << hcsr04_sensors[i].trigger_pin,
+            .mode         = GPIO_MODE_OUTPUT,
+            .intr_type    = GPIO_INTR_DISABLE
+        };
+        gpio_config(&trig);
+
+        gpio_config_t ech  = {
+            .pin_bit_mask = 1ULL << hcsr04_sensors[i].echo_pin,
+            .mode         = GPIO_MODE_INPUT,
+            .intr_type    = GPIO_INTR_DISABLE
+        };
+        gpio_config(&ech);
+    }
+
+    while (true)
+    {
         for (int i = 0; i < NUM_HCSR04_SENSORS; i++) {
-            if (i != current_active_sensor) {
-                hcsr04_sensors[i].distance_cm = 0;
-                hcsr04_sensors[i].last_update = esp_timer_get_time();
+
+            /* 1) wyślij impuls trigger tylko na pin tego czujnika */
+            gpio_set_level(hcsr04_sensors[i].trigger_pin, 1);
+            esp_rom_delay_us(10);
+            gpio_set_level(hcsr04_sensors[i].trigger_pin, 0);
+
+            /* 2) zmierz czas echa */
+            float d = measure_distance(hcsr04_sensors[i].echo_pin);
+            if (d > 0) {
+
+                hcsr04_sensor_t *s = &hcsr04_sensors[i];
+                s->distance_cm = d;
+
+                /* EMA */
+                if (s->filt_cm == HCSR04_INVALID_DISTANCE)
+                    s->filt_cm = d;                   /* pierwsza próbka           */
+                else
+                    s->filt_cm = HCSR04_ALPHA * d +   /* nowa                       */
+                                 (1.0f - HCSR04_ALPHA) * s->filt_cm; /* stara */
+
+                s->last_update = esp_timer_get_time();
+
+                ESP_LOGI("HCSR04",
+                         "Ch%d raw %.1f cm  |  filt %.1f cm",
+                         i+1, d, s->filt_cm);
             }
+            vTaskDelay(pdMS_TO_TICKS(60));  /*  ±60 ms przerwy między czujnikami */
         }
-        
-        vTaskDelay(pdMS_TO_TICKS(100)); // Aktualizacja co 100ms
+
+        /* odświeżenie całego cyklu co ok. 4 × 60 ms = 240 ms */
     }
 }
