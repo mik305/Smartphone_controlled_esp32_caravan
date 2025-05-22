@@ -31,17 +31,10 @@ void app_main(void) {
     xTaskCreate(lsm6dsox_task, "lsm6dsox_task", 4096, NULL, 5, NULL);
     if (bmi323_temp_init() == ESP_OK)
         xTaskCreate(bmi323_temp_task, "bmi323T", 4096, NULL, 5, NULL);
-    
-    xTaskCreate(vl6180x_task, "vl6180_task", 4096, NULL, 5, NULL);
+     
+   
+
+    xTaskCreatePinnedToCore(vl6180x_task, "vl6180x", 4096, NULL, 5, NULL, tskNO_AFFINITY);
 
 }
-
-
-
-
-
-
-
-
-
 
