@@ -12,6 +12,8 @@ idf_component_register(
 			"hx711.c" 
 			"loadcell.c"
 			"vl6180x_sensor.c"
+			"levelling.c"
+			"current_sensor.c"
 			INCLUDE_DIRS "."
              REQUIRES
         bmi323_api      # <-- nasz nowy komponent

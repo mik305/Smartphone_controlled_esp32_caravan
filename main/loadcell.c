@@ -53,10 +53,10 @@ static void hx_task(void *pv)
 {
     for (int i=0;i<4;i++) hx711_init(&cells[i]);
 
-    hx_set_calibration(&cells[0], -131605, -99778, 267.0f);
-    hx_set_calibration(&cells[1], -50000, -30000, 267.0f);
-    hx_set_calibration(&cells[2], -131605, -99778, 267.0f);
-    hx_set_calibration(&cells[3], -131605, -99778, 267.0f);
+    hx_set_calibration(&cells[0], 636607, -744481, 750.0f);
+    hx_set_calibration(&cells[1], -82754, -198890 , 750.0f);
+    hx_set_calibration(&cells[2], -250237, -169118, 750.0f);
+    hx_set_calibration(&cells[3], 659941, 799968, 750.0f);
 
 while (true)
 {
@@ -69,8 +69,8 @@ while (true)
             hx_grams[i] = (raw - cells[i].offset) / cells[i].lsb_per_g;
 
             /* ---------- LOG ---------- */
-            //ESP_LOGI("HX711", "Ch%d: %ld raw  →  %.2f g",
-                     //i + 1, (long)raw, hx_grams[i]);
+            ESP_LOGI("HX711", "Ch%d: %ld raw  →  %.2f g",
+                     i + 1, (long)raw, hx_grams[i]);
         } else {
             ESP_LOGW("HX711", "Ch%d: timeout / odczyt błędny", i + 1);
         }

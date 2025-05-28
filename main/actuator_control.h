@@ -27,5 +27,5 @@
 #define PWM_CHANNEL_IN8 LEDC_CHANNEL_7
 
 void actuator_pwm_init(void);
-
+void actuators_all_stop(void);
 #endif

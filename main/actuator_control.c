@@ -1,4 +1,5 @@
 #include "actuator_control.h"
+#include "driver/ledc.h"
 
 void actuator_pwm_init(void) {
     ledc_timer_config_t timer_conf = {
@@ -23,5 +24,19 @@ void actuator_pwm_init(void) {
 
     for (int i = 0; i < 8; i++) {
         ESP_ERROR_CHECK(ledc_channel_config(&channels[i]));
+    }
+}
+
+void actuators_all_stop(void)
+{
+    for (int actuator_id = 1; actuator_id <= 4; actuator_id++)
+    {
+        uint8_t ch_fwd = PWM_CHANNEL_IN1 + (actuator_id - 1) * 2;
+        uint8_t ch_rev = PWM_CHANNEL_IN2 + (actuator_id - 1) * 2;
+
+        ledc_set_duty(PWM_MODE, ch_fwd, 0);
+        ledc_set_duty(PWM_MODE, ch_rev, 0);
+        ledc_update_duty(PWM_MODE, ch_fwd);
+        ledc_update_duty(PWM_MODE, ch_rev);
     }
 }

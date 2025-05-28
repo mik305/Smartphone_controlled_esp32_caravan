@@ -7,12 +7,21 @@
 #include "hx711.h"                   /* 1)  dodany  */
 #include <string.h>
 #include "esp_log.h"
+#include "levelling.h"
 
 extern volatile float hx_raw[4];
 extern volatile float hx_grams[4];
 
 extern const uint8_t index_html_start[] asm("_binary_index_html_start");
 extern const uint8_t index_html_end[]   asm("_binary_index_html_end");
+
+
+static esp_err_t level_start_handler(httpd_req_t *r)
+{   return level_http_start(); }
+
+static esp_err_t level_stop_handler (httpd_req_t *r)
+{   return level_http_stop();  }
+
 
 static esp_err_t root_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "text/html");
@@ -27,10 +36,10 @@ static esp_err_t sensor_get_handler(httpd_req_t *req)
 
    snprintf(resp, sizeof(resp),
         "{\"temperature\":%.2f,\"humidity\":%.2f,"
-        "\"accel_x\":%.2f,\"accel_y\":%.2f,\"accel_z\":%.2f,"
+        "\"accel_x\":%.4f,\"accel_y\":%.4f,\"accel_z\":%.4f,"
         "\"gyro_x\":%.2f,\"gyro_y\":%.2f,\"gyro_z\":%.2f,"
         "\"bmi323_temp\":%.2f,"
-        "\"bmi323_accel_x\":%.2f,\"bmi323_accel_y\":%.2f,\"bmi323_accel_z\":%.2f,"
+        "\"bmi323_accel_x\":%.4f,\"bmi323_accel_y\":%.4f,\"bmi323_accel_z\":%.4f,"
         "\"bmi323_gyro_x\":%.2f,\"bmi323_gyro_y\":%.2f,\"bmi323_gyro_z\":%.2f,"
         "\"distance_1\":%.2f,\"distance_2\":%.2f,"
         "\"distance_3\":%.2f,\"distance_4\":%.2f,"
@@ -90,6 +99,8 @@ httpd_handle_t start_webserver(void) {
     config.max_uri_handlers = 20;
     httpd_handle_t server = NULL;
 
+
+
     if (httpd_start(&server, &config) == ESP_OK) {
         httpd_uri_t root_uri = { .uri = "/", .method = HTTP_GET, .handler = root_get_handler };
         httpd_register_uri_handler(server, &root_uri);
@@ -97,6 +108,17 @@ httpd_handle_t start_webserver(void) {
         httpd_uri_t sensor_uri = { .uri = "/sensor", .method = HTTP_GET, .handler = sensor_get_handler };
         httpd_register_uri_handler(server, &sensor_uri);
 
+       httpd_uri_t uri_start = {
+        .uri = "/auto_level_start", .method = HTTP_GET,
+        .handler = level_start_handler };
+        httpd_register_uri_handler(server, &uri_start);
+
+    httpd_uri_t uri_stop = {
+        .uri = "/auto_level_stop",  .method = HTTP_GET,
+        .handler = level_stop_handler };
+        httpd_register_uri_handler(server, &uri_stop);
+
+        
         for (int i = 1; i <= 4; i++) {
             char uri[20];
             snprintf(uri, sizeof(uri), "/extend_%d", i);

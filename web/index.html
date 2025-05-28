@@ -40,6 +40,25 @@
   <!-- =================================================================== -->
   <div id="actuatorGrid"></div>
 
+<!-- auto-level: start / stop -->
+  <div style="text-align:center;margin-top:20px">
+    <button class="btn btn-auto"
+            onclick="fetch('/auto_level_start').catch(console.error)">
+      START&nbsp;AUTO-POZIOM
+    </button>
+    <button class="btn btn-stop-auto"
+            onclick="fetch('/auto_level_stop').catch(console.error)">
+      STOP&nbsp;AUTO-POZIOM
+    </button>
+  </div>
+
+  <style>
+  .btn-auto      {background:#2196f3}
+  .btn-stop-auto {background:#f44336}
+  </style>
+
+
+
   <!-- =================================================================== -->
   <!-- 2. Scena 3D                                                         -->
   <!-- =================================================================== -->
@@ -116,11 +135,14 @@
           <button class="btn btn-stop" onclick="toggleActuator(${i},'stop')">STOP</button>
         </div>
       </div>`);
+      
   }
   function toggleActuator(id, action){
     fetch('/' + action + '_' + id).catch(err=>console.warn('fetch actuator:', err));
   }
+  
 
+  
   /* ---------- pobieranie danych z ESP-32 ------------------------------ */
   function fetchSensorData(){
     fetch('/sensor')
@@ -133,7 +155,7 @@
   const cube = document.getElementById('cube');
 
   function updateDisplay(d){
-    const num = (id,val)=>{document.getElementById(id).textContent = (+val).toFixed(2);};
+    const num = (id,val)=>{document.getElementById(id).textContent = (+val).toFixed(4);};
 
     num('temperature', d.temperature);
     num('humidity',    d.humidity);

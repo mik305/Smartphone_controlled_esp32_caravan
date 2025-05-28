@@ -17,6 +17,9 @@ static struct bmi3_dev dev;
 volatile float bmi323_accel_g[3]  = {0};   /* X Y Z g */
 volatile float bmi323_gyro_dps[3] = {0};   /* X Y Z °/s */
 volatile float bmi323_temp_c      = 0.0f;  
+/* ─ filtr wygładzający (EMA) ─*/
+//static float ema_acc[3] = {0};
+//#define EMA_ALPHA   0.10f          /* 0…1  (mniejsza → mocniejsze wygł.) */
 
 /* ───────── I²C callbacks ───────── */
 static int8_t i2c_read(uint8_t reg, uint8_t *data,
@@ -62,6 +65,7 @@ esp_err_t bmi323_temp_init(void)
     cfg_acc.cfg.acc.odr      = BMI3_ACC_ODR_100HZ;
     cfg_acc.cfg.acc.range    = BMI3_ACC_RANGE_2G;
     cfg_acc.cfg.acc.bwp      = BMI3_ACC_BW_ODR_QUARTER;
+    cfg_acc.cfg.acc.avg_num    = BMI3_ACC_AVG64;
 
     /* Żyroskop NORMAL 100 Hz ±1000 dps */
     struct bmi3_sens_config cfg_gyr = { 0 };
@@ -115,14 +119,31 @@ void bmi323_temp_task(void *pv)
         float T = (int16_t)raw_t / 512.0f + 17.0f;
         bmi323_temp_c = T;
 
-        /* akcelerometr */
+        
+        
+        /* akcelerometr ------------------------------------------------------ */
         float ax = NAN, ay = NAN, az = NAN;
-        if (bmi323_get_sensor_data(&acc, 1, &dev) == BMI323_OK) {
+        /* if (bmi323_get_sensor_data(&acc, 1, &dev) == BMI323_OK) {
             ax = raw_to_g(acc.sens_data.acc.x);
             ay = raw_to_g(acc.sens_data.acc.y);
             az = raw_to_g(acc.sens_data.acc.z);
-            bmi323_accel_g[0]  = ax;
-            bmi323_accel_g[1]  = ay;
+
+            
+            ema_acc[0] += EMA_ALPHA * (ax - ema_acc[0]);
+            ema_acc[1] += EMA_ALPHA * (ay - ema_acc[1]);
+            ema_acc[2] += EMA_ALPHA * (az - ema_acc[2]);
+
+            bmi323_accel_g[0] = ema_acc[0];
+            bmi323_accel_g[1] = ema_acc[1];
+            bmi323_accel_g[2] = ema_acc[2];
+        }*/
+
+         if (bmi323_get_sensor_data(&acc, 1, &dev) == BMI323_OK) {
+            ax = raw_to_g(acc.sens_data.acc.x);
+            ay = raw_to_g(acc.sens_data.acc.y);
+            az = raw_to_g(acc.sens_data.acc.z);
+            bmi323_accel_g[0]  = ax + 0.0393;
+            bmi323_accel_g[1] = ay + 0.0115 ;
             bmi323_accel_g[2]  = az;
         }
 
@@ -139,9 +160,12 @@ void bmi323_temp_task(void *pv)
 
         /* log */
         /*ESP_LOGI(TAG,
+         "T=%.1f°C | ACC=%.4f %.4f %.4f g | GYR=%.1f %.1f %.1f dps",
+         T, ema_acc[0], ema_acc[1], ema_acc[2], gx, gy, gz);*/
+       /* ESP_LOGI(TAG,
                  "T=%.1f°C | ACC=%.3f %.3f %.3f g | GYR=%.1f %.1f %.1f dps",
-                 T, ax, ay, az, gx, gy, gz);
-*/
+                 T, ax, ay, az, gx, gy, gz);*/
+
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
