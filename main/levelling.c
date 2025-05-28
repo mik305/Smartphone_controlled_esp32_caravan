@@ -21,6 +21,8 @@
 #include "hdc1080_sensor.h"
 
 #define TAG "LEVELLING"
+/* Jeśli okablowanie jest „odwrotne”, ustaw −1.  Przy prawidłowym +1 */
+#define DIR_SIGN   (1)      /*  <──  zmieniliśmy kabelki  */
 
 const uint8_t adc_addr = 0x48;
 float i[CURRENT_SENSOR_NUM_CHANNELS];
@@ -103,11 +105,21 @@ static void levelling_task(void *pv)
         /* 3. oblicz korekty – bardzo uproszczone mapowanie
          *    ex>0 → pochylony przód w dół, trzeba OPUŚCIĆ przód / PODNIEŚĆ tył
          *    ey>0 → prawa strona w dół, trzeba OPUŚCIĆ prawą / PODNIEŚĆ lewą */
-        int16_t d_front  = (int16_t)(-KP * ex);  /* przód = 1 & 2 */
-        int16_t d_rear   = (int16_t)( KP * ex);  /* tył  = 3 & 4 */
-        int16_t d_left   = (int16_t)( -KP * ey);  /* lewe = 1 & 3 */
-        int16_t d_right  = (int16_t)( -KP * ey);  /* prawe = 2 & 4 */
+        /*int16_t d_front  = (int16_t)(-KP * ex);  // przód = 1 & 2 
+        int16_t d_rear   = (int16_t)( KP * ex);  // tył  = 3 & 4 
+        int16_t d_left   = (int16_t)( -KP * ey);  // lewe = 1 & 3 
+        int16_t d_right  = (int16_t)( -KP * ey);  // prawe = 2 & 4 */
 
+        
+        int16_t d_front  = (int16_t)(-KP * ex);  // przód = 1 & 2 
+        int16_t d_rear   = (int16_t)( KP * ex);  // tył  = 3 & 4 
+        int16_t d_left   = (int16_t)( -KP * ey);  // lewe = 1 & 3 
+        int16_t d_right  = (int16_t)( -KP * ey);
+        
+    if(ex > 0){
+            d_front  = (int16_t)(KP * ex);
+            d_rear   = (int16_t)( -KP * ex);
+    }
         /* nałóż ograniczenie przyrostu */
         #define CLAMP(d)  do{ if((d) >  MAX_DUTY_CHANGE) (d)= MAX_DUTY_CHANGE; \
                              if((d) < -MAX_DUTY_CHANGE) (d)=-MAX_DUTY_CHANGE; }while(0)
@@ -121,8 +133,8 @@ static void levelling_task(void *pv)
         int16_t duty_rr = d_rear  + d_right;   /* right-rear (4)   */
 
         /* logowanie – widać jakie sygnały dostają siłowniki */
-        //ESP_LOGI(TAG, "duty  LF=%d  RF=%d  LR=%d  RR=%d",
-               // duty_lf, duty_rf, duty_lr, duty_rr);
+        ESP_LOGI(TAG, "duty  LF=%d  RF=%d  LR=%d  RR=%d",
+                duty_lf, duty_rf, duty_lr, duty_rr);
 
         
         /* 4. wypadkowe komendy dla 4 siłowników */
@@ -130,6 +142,9 @@ static void levelling_task(void *pv)
         set_actuator_speed(1, duty_rf);
         set_actuator_speed(2, -duty_lr);
         set_actuator_speed(3, -duty_rr);
+
+
+
 
        /* if (current_sensor_read_current_multi(I2C_NUM_0, adc_addr, i) == ESP_OK) {
             printf("M1: %.3f A | M2: %.3f A | M3: %.3f A | M4: %.3f A\n",
@@ -174,5 +189,3 @@ void level_stop(void)              /* ←  NOWA  */
     }
 }
 bool level_busy(void) { return level_task_h != NULL; }
-
-/* ───────── HTTP wrappers ───────── */
