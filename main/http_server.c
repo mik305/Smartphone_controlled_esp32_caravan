@@ -4,12 +4,11 @@
 #include "lsm6dsox_sensor.h"
 #include "actuator_control.h"
 #include "bmi323_sensor.h"
-#include "hx711.h"                   /* 1)  dodany  */
+#include "hx711.h"            
 #include <string.h>
 #include "esp_log.h"
 #include "levelling.h"
 
-extern volatile float hx_raw[4];
 extern volatile float hx_grams[4];
 
 extern const uint8_t index_html_start[] asm("_binary_index_html_start");

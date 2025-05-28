@@ -1,6 +1,5 @@
-
 #include "actuator_control.h"   /* PWM_CHANNEL_*  i  ledc_*()        */
-#include "bmi323_sensor.h"      /* globalne bmi323_accel_g[]          */
+#include "bmi323_sensor.h"     
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
@@ -15,13 +14,16 @@
 // regulator P
 #define LEVEL_TOL          0.01f 
 #define KP                 100000.0f  
-#define MAX_DUTY_CHANGE    2047      /* zabezp. krok‑po‑kroku (0…1023)    */
-#define CYCLE_MS           150      /* takt regulatora                   */
+#define MAX_DUTY_CHANGE    4096    
+#define CYCLE_MS           150      //takt regulatora 
 #define TIMEOUT_SEC        25
 
+ //ograniczenie przyrostu 
+#define CLAMP(d)  do{ if((d) >  MAX_DUTY_CHANGE) (d)= MAX_DUTY_CHANGE; \
+                    if((d) < -MAX_DUTY_CHANGE) (d)=-MAX_DUTY_CHANGE; }while(0)
+
 static TaskHandle_t level_task_h   = NULL; 
-void level_start(void);
-void level_stop(void);
+static volatile bool level_stop_flag = false;
 
 static const uint8_t act_pwm_fwd[4] = { PWM_CHANNEL_IN1, PWM_CHANNEL_IN1+2,
                                         PWM_CHANNEL_IN1+4, PWM_CHANNEL_IN1+6 };
@@ -54,19 +56,6 @@ static void set_actuator_speed(int idx, int16_t duty)
     }
 }
 
-esp_err_t level_http_start(void)
-{
-    level_start();
-    return ESP_OK;
-}
-esp_err_t level_http_stop(void)
-{
-    level_stop();
-    return ESP_OK;
-}
-
-int16_t duty_lf_buf, duty_rf_buf, duty_lr_buf, duty_rr_buf;
-
 static void levelling_task(void *pv)
 {
     TickType_t t0 = xTaskGetTickCount();
@@ -90,10 +79,7 @@ static void levelling_task(void *pv)
         int16_t d_front_back  = (int16_t)( KP * ey); 
         int16_t d_left_right   = (int16_t)( KP * ex);  
         
-        /* nałóż ograniczenie przyrostu */
-        //#define CLAMP(d)  do{ if((d) >  MAX_DUTY_CHANGE) (d)= MAX_DUTY_CHANGE; 
-                             //if((d) < -MAX_DUTY_CHANGE) (d)=-MAX_DUTY_CHANGE; }while(0)
-        
+       
         /* duty dla każdego siłownika  */
         int16_t duty_1 = -d_front_back - d_left_right;    // prawy-front
         int16_t duty_2 = -d_front_back + d_left_right; ;   // lewy-front
@@ -101,7 +87,11 @@ static void levelling_task(void *pv)
         int16_t duty_4 = d_front_back + d_left_right;   // lewy-tylny
     
         
-        //CLAMP(d_front); CLAMP(d_rear); CLAMP(d_left); CLAMP(d_right);
+        CLAMP(duty_1); CLAMP(duty_2); CLAMP(duty_3); CLAMP(duty_4);
+        if(abs(duty_1 < 1600)) duty_1 *=1.5;
+        if(abs(duty_2 < 1600)) duty_2 *=1.5;
+        if(abs(duty_3 < 1600)) duty_3 *=1.5;
+        if(abs(duty_4 < 1600)) duty_4 *=1.5;
 
         // jakie PWMy dostają siłowniki 
         ESP_LOGI(TAG, "duty  LF=%d  RF=%d  LR=%d  RR=%d",
@@ -129,18 +119,19 @@ static void levelling_task(void *pv)
     vTaskDelete(level_task_h);
 }
 
-void level_start(void)
+esp_err_t level_http_start(void)
 {
-    // uruchom task, jeżeli nie istnieje
-    if (xTaskCreate(levelling_task, "level", 4096, NULL, 6, NULL) != pdPASS)
+     if (xTaskCreate(levelling_task, "level", 4096, NULL, 6, NULL) != pdPASS)
         ESP_LOGW(TAG, "levelling already running");
+    return ESP_OK;
 }
-void level_stop(void)     
-{   
+esp_err_t level_http_stop(void)
+{
     actuators_all_stop();
     if (level_task_h) {
         vTaskDelete(level_task_h); 
         level_task_h = NULL;
+        ESP_LOGI(TAG, "PRZERWANO!!");
     }
+    return ESP_OK;
 }
-bool level_busy(void) { return level_task_h != NULL; }

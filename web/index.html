@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>System poziomowania – wizualizacja 3D (ESP-32)</title>
+  <title>Wizualizacja przyczepy 3D</title>
 
   <style>
     body{font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;margin:0;padding:20px}
@@ -33,7 +33,7 @@
   </style>
 </head>
 <body>
-  <h1>System poziomowania – tryb online (ESP-32)</h1>
+  <h1>System poziomowania – tryb ręczny</h1>
 
   <!-- =================================================================== -->
   <!-- 1. Sterowanie siłownikami                                           -->
@@ -44,11 +44,11 @@
   <div style="text-align:center;margin-top:20px">
     <button class="btn btn-auto"
             onclick="fetch('/auto_level_start').catch(console.error)">
-      START&nbsp;AUTO-POZIOM
+      &nbsp;AUTOPOZIOMUJ
     </button>
     <button class="btn btn-stop-auto"
             onclick="fetch('/auto_level_stop').catch(console.error)">
-      STOP&nbsp;AUTO-POZIOM
+      PRZERWIJ&nbsp;AUTOPOZIOMOWANIE
     </button>
   </div>
 
