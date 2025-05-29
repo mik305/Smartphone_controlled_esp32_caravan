@@ -14,9 +14,9 @@
 #define CYCLE_MS           150
 #define TIMEOUT_SEC        25
 #define VERIFICATION_TIME_MS 2000
-#define ACTUATOR_TEST_DUTY  -3000
+#define ACTUATOR_TEST_DUTY  -4095
 #define ACTUATOR_TEST_THRESHOLD 0.015f
-#define ACTUATOR_RETEST_THRESHOLD 0.01f // 0.015 * 0.75
+#define ACTUATOR_RETEST_THRESHOLD 0.02f // 0.015 * 0.75
 
 static TaskHandle_t level_task_h = NULL;
 static volatile bool level_stop_flag = false;
@@ -129,7 +129,7 @@ static void test_actuators() {
         bool threshold_reached = false;
         float current_x = 0, current_y = 0;
         
-        while ((xTaskGetTickCount() - test_start) < pdMS_TO_TICKS(20000)) {
+        while ((xTaskGetTickCount() - test_start) < pdMS_TO_TICKS(13000)) {
             current_x = bmi323_accel_g[0];
             current_y = bmi323_accel_g[1];
             
@@ -151,7 +151,7 @@ static void test_actuators() {
         }
         
         // 4. Przerwa 3 sekundy przed odczytem końcowym
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        vTaskDelay(pdMS_TO_TICKS(2000));
         
         // 5. Odczyt nowych wartości akcelerometru po przerwie
         float new_x = bmi323_accel_g[0];
@@ -177,7 +177,7 @@ static void test_actuators() {
             test_start = xTaskGetTickCount();
             threshold_reached = false;
             
-            while ((xTaskGetTickCount() - test_start) < pdMS_TO_TICKS(20000)) {
+            while ((xTaskGetTickCount() - test_start) < pdMS_TO_TICKS(13000)) {
                 current_x = bmi323_accel_g[0];
                 current_y = bmi323_accel_g[1];
                 
