@@ -20,7 +20,8 @@ static esp_err_t level_start_handler(httpd_req_t *r)
 
 static esp_err_t level_stop_handler (httpd_req_t *r)
 {   return level_http_stop();  }
-
+static esp_err_t simple_level_start_handler(httpd_req_t *r)
+{return simple_level_http_start();}
 
 static esp_err_t root_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "text/html");
@@ -106,6 +107,12 @@ httpd_handle_t start_webserver(void) {
 
         httpd_uri_t sensor_uri = { .uri = "/sensor", .method = HTTP_GET, .handler = sensor_get_handler };
         httpd_register_uri_handler(server, &sensor_uri);
+
+
+        httpd_uri_t uri_simple_start = {
+        .uri = "/simple_auto_level_start", .method = HTTP_GET,
+        .handler = simple_level_start_handler };
+        httpd_register_uri_handler(server, &uri_simple_start);
 
        httpd_uri_t uri_start = {
         .uri = "/auto_level_start", .method = HTTP_GET,

@@ -119,4 +119,3 @@ void hx_start_task(void)
     xTaskCreatePinnedToCore(hx_task, "hx711_task", 4096,
                             NULL, 5, NULL, tskNO_AFFINITY);
 }
-

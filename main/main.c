@@ -1,4 +1,3 @@
-/* ---------------- app_main.c ----------------------------------------- */
 #include "wifi_ap.h"
 #include "http_server.h"
 #include "actuator_control.h"
@@ -58,7 +57,7 @@ void app_main(void)
         xTaskCreate(bmi323_temp_task, "bmi323T", 4096, NULL, 5, NULL);
 
     /* NOWE – monitor prądu */
-    xTaskCreate(current_monitor_task, "curr_mon", 4096, NULL, 5, NULL);
+   // xTaskCreate(current_monitor_task, "curr_mon", 4096, NULL, 5, NULL);
 
     //xTaskCreatePinnedToCore(vl6180x_task, "vl6180x", 4096, NULL, 5, NULL, tskNO_AFFINITY);
 }

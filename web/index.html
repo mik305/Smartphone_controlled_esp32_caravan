@@ -42,10 +42,17 @@
 
 <!-- auto-level: start / stop -->
   <div style="text-align:center;margin-top:20px">
+    
+    <button class="btn btn-simple-auto"
+            onclick="fetch('/simple_auto_level_start').catch(console.error)">
+      &nbsp;AUTOPOZIOMUJ SIMPLE
+    </button>
+
     <button class="btn btn-auto"
             onclick="fetch('/auto_level_start').catch(console.error)">
-      &nbsp;AUTOPOZIOMUJ
+      &nbsp;AUTOPOZIOMUJ COMPLEX
     </button>
+
     <button class="btn btn-stop-auto"
             onclick="fetch('/auto_level_stop').catch(console.error)">
       PRZERWIJ&nbsp;AUTOPOZIOMOWANIE
