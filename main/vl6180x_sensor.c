@@ -1,9 +1,4 @@
-
 #include "esp_check.h"
-/*************************************************************************
- *  vl6180x_sensor.c  – obsługa czterech czujników VL6180X na jednej szynie
- *  autor: ChatGPT (maj 2025)
- *************************************************************************/
 #include "vl6180x_sensor.h"
 
 static const char *TAG = "VL6180X";
