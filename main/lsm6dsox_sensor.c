@@ -10,7 +10,6 @@ volatile float accel_g[3] = {0.0f, 0.0f, 0.0f};
 volatile float gyro_dps[3] = {0.0f, 0.0f, 0.0f};
 
 void lsm6dsox_sensor_init() {
-    // Inicjalizacja I2C jest już wykonana w hdc1080_sensor_init(), więc tutaj nie jest potrzebna.
     // Konfiguracja akcelerometru (416 Hz, ±8g)
     uint8_t config[2] = {LSM6DSOX_CTRL1_XL, 0x6C};
     ESP_ERROR_CHECK(i2c_master_write_to_device(LSM6DSOX_I2C_NUM, LSM6DSOX_ADDR, config, sizeof(config), 100 / portTICK_PERIOD_MS));

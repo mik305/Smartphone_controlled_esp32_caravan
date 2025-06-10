@@ -3,207 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wizualizacja przyczepy 3D</title>
-
+  <title>Sterowanie siłownikiem</title>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;margin:0;padding:20px}
-    h1{text-align:center;margin-top:0}
-
-    /* ---- siłowniki ----------------------------------------------------- */
-    #actuatorGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;max-width:1000px;margin:30px auto}
-    .actuator{background:#fff;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.1);text-align:center;padding:15px}
-    .actuator-buttons{display:flex;justify-content:space-around;margin-top:10px}
-    .btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;font-size:18px;border:none;border-radius:8px;color:#fff;cursor:pointer;transition:.2s}
-    .btn:hover{transform:scale(1.05)}
-    .btn-up,.btn-down{background:#4caf50}.btn-stop{background:#f44336}
-
-    /* ---- scena 3D ------------------------------------------------------ */
-    #cubeScene{width:220px;height:220px;margin:40px auto 0;perspective:700px}
-    #cube{position:relative;width:120px;height:120px;margin:auto;transform-style:preserve-3d;transition:transform .1s ease-out}
-    .face{position:absolute;width:120px;height:120px;border:2px solid #fff;box-sizing:border-box;background:rgba(76,175,80,.8);}
-    .front {transform:translateZ(60px)}
-    .back  {transform:rotateY(180deg) translateZ(60px)}
-    .right {transform:rotateY( 90deg) translateZ(60px)}
-    .left  {transform:rotateY(-90deg) translateZ(60px)}
-    .top   {transform:rotateX( 90deg) translateZ(60px)}
-    .bottom{transform:rotateX(-90deg) translateZ(60px)}
-
-    /* ---- blok czujników ------------------------------------------------- */
-    #sensorData{max-width:800px;margin:40px auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.1);font-size:1.05em}
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f4; }
+    h1 { color: #333; }
+    .btn {
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      margin: 10px;
+      transition: transform .2s;
+    }
+    .btn:hover { transform: scale(1.05); }
+    .btn-start { background-color: #4CAF50; /* Green */ }
+    .btn-stop { background-color: #f44336; /* Red */ }
   </style>
 </head>
 <body>
-  <h1>System poziomowania – tryb ręczny</h1>
 
-  <!-- =================================================================== -->
-  <!-- 1. Sterowanie siłownikami                                           -->
-  <!-- =================================================================== -->
-  <div id="actuatorGrid"></div>
-
-<!-- auto-level: start / stop -->
-  <div style="text-align:center;margin-top:20px">
-    
-    <button class="btn btn-simple-auto"
-            onclick="fetch('/simple_auto_level_start').catch(console.error)">
-      &nbsp;AUTOPOZIOMUJ SIMPLE
-    </button>
-
-    <button class="btn btn-auto"
-            onclick="fetch('/auto_level_start').catch(console.error)">
-      &nbsp;AUTOPOZIOMUJ COMPLEX
-    </button>
-
-    <button class="btn btn-stop-auto"
-            onclick="fetch('/auto_level_stop').catch(console.error)">
-      PRZERWIJ&nbsp;AUTOPOZIOMOWANIE
-    </button>
-  </div>
-
-  <style>
-  .btn-auto      {background:#2196f3}
-  .btn-stop-auto {background:#f44336}
-  </style>
-
-
-
-  <!-- =================================================================== -->
-  <!-- 2. Scena 3D                                                         -->
-  <!-- =================================================================== -->
-  <div id="cubeScene">
-    <div id="cube">
-      <div class="face front"></div>
-      <div class="face back"></div>
-      <div class="face right"></div>
-      <div class="face left"></div>
-      <div class="face top"></div>
-      <div class="face bottom"></div>
-    </div>
-  </div>
-
-  <!-- =================================================================== -->
-  <!-- 3. Wartości liczbowe                                                -->
-  <!-- =================================================================== -->
-  <div id="sensorData">
-    <h3>Dane z czujników:</h3>
-    <p>HDC1080 Wilgotność: <span id="humidity">--</span> %</p>
-    <p>HDC1080 Temperatura: <span id="temperature">--</span> °C</p>
-    <p>BMI323 Temperatura: <span id="bmi323_temp">--</span> °C</p>
-
-    <p>LSM6DSOX Akcelerometr:
-       X = <span id="accel_x">--</span> g,&nbsp;
-       Y = <span id="accel_y">--</span> g,&nbsp;
-       Z = <span id="accel_z">--</span> g
-    </p>
-    <p>LSM6DSOX Żyroskop:
-       X = <span id="gyro_x">--</span> °/s,&nbsp;
-       Y = <span id="gyro_y">--</span> °/s,&nbsp;
-       Z = <span id="gyro_z">--</span> °/s
-    </p>
-
-    <p>BMI323 Akcelerometr:
-       X = <span id="bmi323_accel_x">--</span> g,&nbsp;
-       Y = <span id="bmi323_accel_y">--</span> g,&nbsp;
-       Z = <span id="bmi323_accel_z">--</span> g
-    </p>
-    <p>BMI323 Żyroskop:
-       X = <span id="bmi323_gyro_x">--</span> °/s,&nbsp;
-       Y = <span id="bmi323_gyro_y">--</span> °/s,&nbsp;
-       Z = <span id="bmi323_gyro_z">--</span> °/s
-    </p>
-
-    <p>HX711 Tensometry:
-       1 = <span id="loadcell_1">--</span> g,&nbsp;
-       2 = <span id="loadcell_2">--</span> g,&nbsp;
-       3 = <span id="loadcell_3">--</span> g,&nbsp;
-       4 = <span id="loadcell_4">--</span> g
-    </p>
-
-    <p>HC-SR04 Odległości:
-       S1 = <span id="distance_1">--</span> cm,&nbsp;
-       S2 = <span id="distance_2">--</span> cm,&nbsp;
-       S3 = <span id="distance_3">--</span> cm,&nbsp;
-       S4 = <span id="distance_4">--</span> cm
-    </p>
-  </div>
-
-  <!-- =================================================================== -->
-  <!-- 4. JavaScript                                                       -->
-  <!-- =================================================================== -->
-  <script>
-  /* ---------- siłowniki ------------------------------------------------ */
-  const grid = document.getElementById('actuatorGrid');
-  for(let i=1;i<=4;i++){
-    grid.insertAdjacentHTML('beforeend',`
-      <div class="actuator">
-        <h3>Siłownik ${i}</h3>
-        <div class="actuator-buttons">
-          <button class="btn btn-up"   onclick="toggleActuator(${i},'extend')">⬆</button>
-          <button class="btn btn-down" onclick="toggleActuator(${i},'retract')">⬇</button>
-          <button class="btn btn-stop" onclick="toggleActuator(${i},'stop')">STOP</button>
-        </div>
-      </div>`);
-      
-  }
-  function toggleActuator(id, action){
-    fetch('/' + action + '_' + id).catch(err=>console.warn('fetch actuator:', err));
-  }
+  <h1>Sterowanie siłownikiem na podstawie akcelerometru</h1>
   
-
+  <button class="btn btn-start" onclick="fetch('/start').catch(console.error)">
+    START
+  </button>
   
-  /* ---------- pobieranie danych z ESP-32 ------------------------------ */
-  function fetchSensorData(){
-    fetch('/sensor')
-      .then(resp => resp.json())
-      .then(updateDisplay)
-      .catch(err => console.error('Błąd fetch /sensor:', err));
-  }
+  <button class="btn btn-stop" onclick="fetch('/stop').catch(console.error)">
+    STOP
+  </button>
 
-  /* ---------- prezentacja danych -------------------------------------- */
-  const cube = document.getElementById('cube');
-
-  function updateDisplay(d){
-    const num = (id,val)=>{document.getElementById(id).textContent = (+val).toFixed(4);};
-
-    num('temperature', d.temperature);
-    num('humidity',    d.humidity);
-
-    /* LSM6DSOX */
-    num('accel_x', d.accel_x); num('accel_y', d.accel_y); num('accel_z', d.accel_z);
-    num('gyro_x',  d.gyro_x);  num('gyro_y',  d.gyro_y);  num('gyro_z',  d.gyro_z);
-
-    /* BMI323 */
-    num('bmi323_temp', d.bmi323_temp);
-    num('bmi323_accel_x', d.bmi323_accel_x);
-    num('bmi323_accel_y', d.bmi323_accel_y);
-    num('bmi323_accel_z', d.bmi323_accel_z);
-    num('bmi323_gyro_x',  d.bmi323_gyro_x);
-    num('bmi323_gyro_y',  d.bmi323_gyro_y);
-    num('bmi323_gyro_z',  d.bmi323_gyro_z);
-
-    /* HX711 */
-    num('loadcell_1', d.loadcell_1);
-    num('loadcell_2', d.loadcell_2);
-    num('loadcell_3', d.loadcell_3);
-    num('loadcell_4', d.loadcell_4);
-
-    /* HC-SR04 */
-    num('distance_1', d.distance_1); num('distance_2', d.distance_2);
-    num('distance_3', d.distance_3); num('distance_4', d.distance_4);
-
-    updateCubeOrientation(d);
-  }
-
-  // ----- przeliczanie przyspieszeń -> nachylenie bryły -----------------
-  function updateCubeOrientation(d){
-    const ax = d.accel_x, ay = d.accel_y, az = d.accel_z;
-    const pitch = Math.atan2(ax, Math.sqrt(ay*ay + az*az)) * 180/Math.PI; // rotX
-    const roll  = Math.atan2(ay, Math.sqrt(ax*ax + az*az)) * 180/Math.PI; // rotY
-    cube.style.transform = `rotateX(${pitch}deg) rotateY(${roll}deg)`;
-  }
-
-  /* ---------- pętla odświeżania --------------------------------------- */
-  setInterval(fetchSensorData, 200); // co 200 ms – wystarczy
-  fetchSensorData();                 // pierwszy odczyt od razu
-  </script>
 </body>
 </html>

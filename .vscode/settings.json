@@ -1,11 +1,11 @@
 {
     "C_Cpp.intelliSenseEngine": "default",
-    "idf.espIdfPathWin": "C:\\Users\\emiaz\\esp\\v5.4.1\\esp-idf",
-    "idf.pythonInstallPath": "C:\\Users\\emiaz\\esp\\tools\\tools\\idf-python\\3.11.2\\python.exe",
+    "idf.espIdfPathWin": "C:\\Users\\domin\\esp\\v5.4.1\\esp-idf",
+    "idf.pythonInstallPath": "C:\\Users\\domin\\esp\\tools\\tools\\idf-python\\3.11.2\\python.exe",
     "idf.openOcdConfigs": [
         "board/esp32-wrover-kit-3.3v.cfg"
     ],
-    "idf.toolsPathWin": "C:\\Users\\emiaz\\esp\\tools",
+    "idf.toolsPathWin": "C:\\Users\\domin\\esp\\tools",
     "files.associations": {
         "freertos.h": "c",
         "task.h": "c",
