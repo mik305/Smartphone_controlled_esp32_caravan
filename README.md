@@ -11,12 +11,33 @@ Awards
 
 - Voted 3 rd place in the 2025 student popularity contest “My Favourite Group Project”.
 
+## Project overview
+SSPK (Pol. System Samopoziomowania Przyczepy Kempingowej) is a real-time platform that
+automatically levels a caravan once it is parked.
+The core is an ESP-32-S3 module running FreeRTOS, controlling:
 
+| Sub - system	           | Purpose|
+| ------ | ----------- |
+| 4 × linear actuators	| lifting / lowering each corner|
+| BMI323 & LSM6DSOX IMUs| pitch/roll feedback & redundancy|
+| 4 × NA27 + HX711	| load cells – check if a leg touches ground|
+| 4 × VL6180X & 4 × HC-SR04| laser / ultrasonic distance sensors |
+| INA180 + ADS1115	| current monitoring of every actuator|
+| HDC1080	| temperature & humidity inside the electronics box|
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+An onboard Wi-Fi access point (2.4 GHz, WPA2-PSK, IPv4) hosts a responsive web-app.
+All levelling modes can be triggered from any phone / laptop browser – no internet required.
 
-
+## Main features
+- Three levelling modes
+- Manual – jog every actuator independently.
+- Simple auto – proportional controller (P-only) in X & Y, finishes in ≈ 8 s.
+- Complex auto – detects floating legs, extends them first, then runs simple auto; typical time < 40 s.
+- Real-time 3-D visualisation (HTML + CSS + JS) of caravan tilt.
+- Safety – “STOP” button aborts any automatic cycle and powers down all actuators.
+- Rich telemetry – live IMU, environmental, distance and load-cell read-outs.
+- On-board current monitoring – detects stalled or overloaded actuators.
+- Firmware over USB - C, micro USB and UART flashing.
 
 ## Quick start 
 1. Clone
