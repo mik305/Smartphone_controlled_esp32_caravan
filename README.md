@@ -42,9 +42,9 @@ All levelling modes can be triggered from any phone / laptop browser – no inte
 ## Hardware architecture
 - PCB: 2-layer, 12 V bus, designed in Altium Designer.
 - Power:
-- - TPS62933 – buck 12 V → 5 V (ESP-32-S3, sensors)
-- - AMS1117 – linear 5 V → 3 .3 V
-- - AON6403 reverse-polarity MOSFET.
++ TPS62933 – buck 12 V → 5 V (ESP-32-S3, sensors)
++ AMS1117 – linear 5 V → 3 .3 V
++ AON6403 reverse-polarity MOSFET.
 - Motor drivers: 4 × DRV8251DDAR (PWM → voltage, integrator-like behaviour).
 - External: 3-D-printed adapters coupling load cells to actuators (modelled in Autodesk Inventor).
 
