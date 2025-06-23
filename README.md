@@ -42,11 +42,17 @@ All levelling modes can be triggered from any phone / laptop browser – no inte
 ## Hardware architecture
 - PCB: 2-layer, 12 V bus, designed in Altium Designer.
 - Power:
-+ TPS62933 – buck 12 V → 5 V (ESP-32-S3, sensors)
-+ AMS1117 – linear 5 V → 3 .3 V
-+ AON6403 reverse-polarity MOSFET.
+  + TPS62933 – buck 12 V → 5 V (ESP-32-S3, sensors)
+  + AMS1117 – linear 5 V → 3 .3 V
+  + AON6403 reverse-polarity MOSFET.
 - Motor drivers: 4 × DRV8251DDAR (PWM → voltage, integrator-like behaviour).
 - External: 3-D-printed adapters coupling load cells to actuators (modelled in Autodesk Inventor).
+
+## Concurrency
+- FreeRTOS tasks:
+  - levelling_task – core controller, 150 ms cycle.
+  - hx711_task, vl6180x_task, hcsr04_task … – dedicated sensor threads.
+- I²C bus shared by all sensors, protected by the ESP-IDF driver (handles arbitration).
 
 ## Quick start 
 1. Clone
@@ -69,12 +75,7 @@ idf.py flash monitor
 - Use AUTO LEVEL SIMPLE or COMPLEX – watch the caravan level itself!
 
 
-
-
-
-## Example folder contents
-
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
+## Folder contents
 
 ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
 files that provide set of directives and instructions describing the project's source files and targets
@@ -95,5 +96,4 @@ src/
 │   └─ ...
 └─ webapp/                # HTML / CSS / JS
 ```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
+
