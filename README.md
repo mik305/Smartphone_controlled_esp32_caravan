@@ -1,9 +1,17 @@
 | Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C6 | ESP32-H2 | ESP32-P4 | ESP32-S2 | ESP32-S3 |
 | ----------------- | ----- | -------- | -------- | -------- | -------- | -------- | -------- | -------- |
 
-# _Sample project_
+# Smartphone controlled Self-Levelling Caravan System
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+A smartphone-controlled, ESP-32-S3 based platform
+
+Awards
+
+- Nominated for the Dean’s Award of the Faculty of Electronics, Telecommunications and Informatics, Gdańsk University of Technology.
+
+- Voted 3 rd place in the 2025 student popularity contest “My Favourite Group Project”.
+
+
 
 This is the simplest buildable example. The example is used by command `idf.py create-project`
 that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
@@ -25,11 +33,17 @@ files that provide set of directives and instructions describing the project's s
 Below is short explanation of remaining files in the project folder.
 
 ```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
+src/
+├─ main/
+│   ├─ wifi_ap.c          # Wi-Fi AP initialisation
+│   ├─ http_server.c      # REST-like handlers + SPA hosting
+│   ├─ levelling.c        # control algorithms (modes, PID-P, EMA)
+│   ├─ sensor drivers/
+│   │   ├─ bmi323_sensor.c
+│   │   ├─ lsm6dsox_sensor.c
+│   │   ├─ hx711.c  ...
+│   └─ ...
+└─ webapp/                # HTML / CSS / JS
 ```
 Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
 They are not used or needed when building with CMake and idf.py.
