@@ -93,4 +93,5 @@ src/
 │   └─ ...
 └─ webapp/                # HTML / CSS / JS
 ```
-
+## Picture of the project
+![Image](https://github.com/user-attachments/assets/4701f90a-a385-4be3-ad7d-f339b919c51e)
