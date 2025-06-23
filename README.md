@@ -18,9 +18,29 @@ that copies the project to user specified path and set it's name. For more infor
 
 
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
+## Quick start 
+1. Clone
+````bash
+git clone https://github.com/mik305/Smartphone_controlled_esp32_caravan
+cd Smartphone_controlled_esp32_caravan
+````
+2. Configure & build (ESP-IDF ≥ 5.0)
+
+````bash
+idf.py menuconfig    # optional Wi-Fi SSID/PSK change
+idf.py flash monitor
+````
+3. Connect
+
+- Join the Wi-Fi AP ESP32_WIFI
+
+- Open http://192.168.4.1 in a browser.
+
+- Use AUTO LEVEL SIMPLE or COMPLEX – watch the caravan level itself!
+
+
+
+
 
 ## Example folder contents
 
